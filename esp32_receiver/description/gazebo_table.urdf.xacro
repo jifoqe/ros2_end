@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="table">
+        
+    <material name="red">
+        <color rgba="1 0 0 1"/>
+    </material>
+    <material name="gray">
+        <color rgba="0.5 0.5 0.5 1"/>
+    </material>
+    <material name="orange">
+        <color rgba="1 0.3 0.1 1"/>
+    </material>
+    <!-- ✅ 載入桌子模型 -->
+    <link name="base_link"/>
+
+    <xacro:include filename="goal.xacro"/>
+    <xacro:include filename="table.xacro"/>
+    <xacro:include filename="wall.xacro"/>
+    <!-- ========= 區域 macro ========= -->
+    <xacro:macro name="create_zone" params="parent offset_x offset_y parent_two">
+        <link name="${parent}"/>
+        <joint name="${parent_two}" type="fixed">
+            <parent link="base_link"/>
+            <child link="${parent}"/>
+            <origin xyz="${offset_x} ${offset_y} 0" rpy="0 0 0"/>
+        </joint>
+
+        <!-- 桌子 -->
+        <xacro:table parent="${parent}" material_name="orange" xyz="${offset_x + 1} ${offset_y + 1.5} 0"/>
+
+        <!-- 牆壁 -->
+        <xacro:wall parent="${parent}" material_name="gray" xyz="${offset_x + 0} ${offset_y + 0} 0"/>
+
+        <!-- 目標紅點 -->
+        <xacro:goal parent="base_link" xyz="${offset_x - 1} ${offset_y + 1} -0.15" material_name="red"/>
+        <xacro:goal parent="base_link" xyz="${offset_x - 0.5} ${offset_y + 1} -0.15" material_name="red"/>
+        <xacro:goal parent="base_link" xyz="${offset_x + 0} ${offset_y + 1} -0.15" material_name="red"/>
+        <xacro:goal parent="base_link" xyz="${offset_x + 0.5} ${offset_y + 1} -0.15" material_name="red"/>
+        <xacro:goal parent="base_link" xyz="${offset_x + 1} ${offset_y + 1} -0.15" material_name="red"/>
+
+        <!-- 鏡頭 (目前註解掉) -->
+        <!--
+        <xacro:include filename="camera.xacro"/>
+        <xacro:top_camera parent="base_link" camera_name="sky_cam" height="3.0"/>
+        -->
+    </xacro:macro>
+
+
+    <xacro:create_zone parent="wall1_link" offset_x="0" offset_y="0" parent_two="wall1_link"/>
+    <xacro:create_zone parent="wall2_link" offset_x="4" offset_y="0" parent_two="wall2_link"/>
+    <xacro:create_zone parent="wall3_link" offset_x="8" offset_y="0" parent_two="wall3_link"/>
+    <xacro:create_zone parent="wall4_link" offset_x="0" offset_y="-4" parent_two="wall4_link"/>
+    <xacro:create_zone parent="wall5_link" offset_x="4" offset_y="-4" parent_two="wall5_link"/>
+    <xacro:create_zone parent="wall6_link" offset_x="8" offset_y="-4" parent_two="wall6_link"/>
+    <!-- <xacro:create_zone parent="wall7_link" offset_x="0" offset_y="-8" parent_two="wall7_link"/>
+    <xacro:create_zone parent="wall8_link" offset_x="4" offset_y="-8" parent_two="wall8_link"/>
+    <xacro:create_zone parent="wall9_link" offset_x="8" offset_y="-8" parent_two="wall9_link"/> -->
+</robot>

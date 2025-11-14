@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="wall" params="parent material_name xyz">
+    <!-- 前牆 -->
+    <joint name="wall_front_joint_${xyz}" type="fixed">
+        <parent link="${parent}"/>
+        <child link="wall_front_${xyz}"/>
+        <origin xyz="0 2 0"/>
+    </joint>
+    <link name="wall_front_${xyz}">
+        <visual>
+          <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="3 0.1 0.3"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="3 0.1 0.3"/>
+            </geometry>
+        </collision>
+        <inertial>
+          <mass value="10"/> <!-- 任意合理質量 -->
+          <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+        </inertial>
+    </link>
+    <gazebo reference="wall_front_${xyz}">
+        <material>Gazebo/Grey</material>
+        <static>true</static>
+    </gazebo>
+
+    <!-- 後牆 -->
+    <joint name="wall_back_joint_${xyz}" type="fixed">
+        <parent link="${parent}"/>
+        <child link="wall_back_${xyz}"/>
+        <origin xyz="0 -1 0"/>
+    </joint>
+    <link name="wall_back_${xyz}">
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="3 0.1 0.3"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="3 0.1 0.3"/>
+            </geometry>
+        </collision>
+        <inertial>
+          <mass value="100"/>
+          <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+        </inertial>
+    </link>
+    <gazebo reference="wall_back_${xyz}">
+        <material>Gazebo/Grey</material>
+        <static>true</static>
+    </gazebo>
+
+    <!-- 左牆 -->
+    <joint name="wall_left_joint_${xyz}" type="fixed">
+        <parent link="${parent}"/>
+        <child link="wall_left_${xyz}"/>
+        <origin xyz="-1.5 0.5 0"/>
+    </joint>
+    <link name="wall_left_${xyz}">
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="0.1 3 0.3"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="0.1 3 0.3"/>
+            </geometry>
+        </collision>
+        <inertial>
+          <mass value="10"/>
+          <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+        </inertial>
+    </link>
+    <gazebo reference="wall_left_${xyz}">
+        <material>Gazebo/Grey</material>
+        <static>true</static>
+    </gazebo>
+
+    <!-- 右牆 -->
+    <joint name="wall_right_joint_${xyz}" type="fixed">
+        <parent link="${parent}"/>
+        <child link="wall_right_${xyz}"/>
+        <origin xyz="1.5 0.5 0"/>
+    </joint>
+    <link name="wall_right_${xyz}">
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="0.1 3 0.3"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="0.1 3 0.3"/>
+            </geometry>
+        </collision>
+        <inertial>
+          <mass value="10"/>
+          <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+        </inertial>
+    </link>
+    <gazebo reference="wall_right_${xyz}">
+        <material>Gazebo/Grey</material>
+        <static>true</static>
+    </gazebo>
+  </xacro:macro>
+</robot>
