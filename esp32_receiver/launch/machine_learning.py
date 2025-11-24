@@ -136,7 +136,7 @@ class GoToPointRL(Node):
         # self.episode = int(self.robot_index)-8
         self.episode = int(self.robot_index)-8
         self.episode_start_time = None
-        self.max_episode_time = 30.0       # 每輪最多 5 秒
+        self.max_episode_time = 40.0       # 每輪最多 5 秒
         self.prev_distance = 0.0
         self.prev_position = 0.0
         # self.control_rate = self.create_rate(10)
@@ -149,8 +149,8 @@ class GoToPointRL(Node):
         self.ready_for_step = True
 
         # === 速度設定 ===
-        self.speed_linear = 0.05
-        self.speed_angular = 0.05
+        self.speed_linear = 0.1
+        self.speed_angular = 0.1
 
         # === DQN 超參數 ===
         self.state_dim = 3                # x ,y , yaw
@@ -473,6 +473,7 @@ class GoToPointRL(Node):
             # self.get_logger().info(f'現在的情況：位置:{x:.2f}  {y:.2f}')
             twist.linear.x = max(-self.speed_linear, min(self.speed_linear, dx_move))
             twist.linear.y = max(-self.speed_linear, min(self.speed_linear, dy_move))
+            # twist.angular.z = max(-self.speed_angular, min(self.speed_angular, 2*angle_diff))
             self.cmd_pub.publish(twist)
             self.ready_for_step = False
             return

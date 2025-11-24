@@ -6,11 +6,11 @@ def generate_launch_description():
     #                'robot04', 'robot05', 'robot06',
     #                'robot07', 'robot08', 'robot09']  # 想要生成的車子名稱
 
-    robot_names = ['robot1', 'robot2', 'robot3',
-                   'robot4', 'robot5', 'robot6',
-                   'robot7', 'robot8', 'robot9']  # 想要生成的車子名稱
+    # robot_names = ['robot1', 'robot2', 'robot3',
+    #                'robot4', 'robot5', 'robot6',
+    #                'robot7', 'robot8', 'robot9']  # 想要生成的車子名稱
     
-    # robot_names = ['robot1']
+    robot_names = ['robot1']
 
     nodes = []
 

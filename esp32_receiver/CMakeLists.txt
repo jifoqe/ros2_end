@@ -33,6 +33,9 @@ ament_target_dependencies(udp_receiver rclcpp std_msgs)
 add_executable(subscriber src/subscriber.cpp)
 ament_target_dependencies(subscriber rclcpp std_msgs)
 
+add_executable(udp_server src/udp_server.cpp)
+ament_target_dependencies(udp_server rclcpp std_msgs)
+
 # web_sub
 add_executable(web_sub src/web_sub.cpp)
 ament_target_dependencies(web_sub rclcpp std_msgs)
@@ -84,6 +87,7 @@ install(TARGETS
   web_sub 
   subscriber
   udp_receiver
+  udp_server
   DESTINATION lib/${PROJECT_NAME})
 
 install(

@@ -1,4 +1,4 @@
-//發送訊號 node
+//發送訊號 node topic
 #include <rclcpp/rclcpp.hpp>
 #include <sys/socket.h>
 #include <netinet/in.h>
