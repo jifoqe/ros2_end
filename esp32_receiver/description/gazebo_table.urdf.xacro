@@ -52,7 +52,33 @@
     <xacro:create_zone parent="wall4_link" offset_x="0" offset_y="-4" parent_two="wall4_link"/>
     <xacro:create_zone parent="wall5_link" offset_x="4" offset_y="-4" parent_two="wall5_link"/>
     <xacro:create_zone parent="wall6_link" offset_x="8" offset_y="-4" parent_two="wall6_link"/>
-    <!-- <xacro:create_zone parent="wall7_link" offset_x="0" offset_y="-8" parent_two="wall7_link"/>
+    <xacro:create_zone parent="wall7_link" offset_x="0" offset_y="-8" parent_two="wall7_link"/>
     <xacro:create_zone parent="wall8_link" offset_x="4" offset_y="-8" parent_two="wall8_link"/>
-    <xacro:create_zone parent="wall9_link" offset_x="8" offset_y="-8" parent_two="wall9_link"/> -->
+    <xacro:create_zone parent="wall9_link" offset_x="8" offset_y="-8" parent_two="wall9_link"/>
+
+    <!-- <xacro:create_zone parent="wall1_link" offset_x="0" offset_y="0" parent_two="wall1_link"/>
+    <xacro:create_zone parent="wall2_link" offset_x="4" offset_y="0" parent_two="wall2_link"/>
+    <xacro:create_zone parent="wall3_link" offset_x="8" offset_y="0" parent_two="wall3_link"/>
+    <xacro:create_zone parent="wall4_link" offset_x="12" offset_y="0" parent_two="wall4_link"/>
+    <xacro:create_zone parent="wall5_link" offset_x="16" offset_y="0" parent_two="wall5_link"/>
+    <xacro:create_zone parent="wall6_link" offset_x="20" offset_y="0" parent_two="wall6_link"/>
+    <xacro:create_zone parent="wall7_link" offset_x="24" offset_y="0" parent_two="wall7_link"/>
+    <xacro:create_zone parent="wall8_link" offset_x="0" offset_y="-4" parent_two="wall8_link"/>
+    <xacro:create_zone parent="wall9_link" offset_x="4" offset_y="-4" parent_two="wall9_link"/>
+    <xacro:create_zone parent="wall10_link" offset_x="8" offset_y="-4" parent_two="wall10_link"/>
+    <xacro:create_zone parent="wall11_link" offset_x="12" offset_y="-4" parent_two="wall11_link"/>
+    <xacro:create_zone parent="wall12_link" offset_x="16" offset_y="-4" parent_two="wall12_link"/>
+    <xacro:create_zone parent="wall13_link" offset_x="20" offset_y="-4" parent_two="wall13_link"/>
+    <xacro:create_zone parent="wall14_link" offset_x="24" offset_y="-4" parent_two="wall14_link"/>
+    <xacro:create_zone parent="wall15_link" offset_x="0" offset_y="-8" parent_two="wall15_link"/>
+    <xacro:create_zone parent="wall16_link" offset_x="4" offset_y="-8" parent_two="wall16_link"/>
+    <xacro:create_zone parent="wall17_link" offset_x="8" offset_y="-8" parent_two="wall17_link"/>
+    <xacro:create_zone parent="wall18_link" offset_x="12" offset_y="-8" parent_two="wall18_link"/>
+    <xacro:create_zone parent="wall19_link" offset_x="16" offset_y="-8" parent_two="wall19_link"/>
+    <xacro:create_zone parent="wall20_link" offset_x="20" offset_y="-8" parent_two="wall20_link"/>
+    <xacro:create_zone parent="wall21_link" offset_x="24" offset_y="-8" parent_two="wall21_link"/>
+    <xacro:create_zone parent="wall22_link" offset_x="0" offset_y="-12" parent_two="wall22_link"/>
+    <xacro:create_zone parent="wall23_link" offset_x="4" offset_y="-12" parent_two="wall23_link"/>
+    <xacro:create_zone parent="wall24_link" offset_x="8" offset_y="-12" parent_two="wall24_link"/>
+    <xacro:create_zone parent="wall25_link" offset_x="12" offset_y="-12" parent_two="wall25_link"/> -->
 </robot>

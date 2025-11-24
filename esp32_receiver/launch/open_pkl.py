@@ -1,24 +1,44 @@
 #!/usr/bin/env python3
-import pickle
+import csv
 import matplotlib.pyplot as plt
 
-# 載入 Q-table
-with open("/home/g/ros2_ws/src/esp32_receiver/data/q_table.pkl", "rb") as f:
-    q_table = pickle.load(f)
+# CSV 路徑
+csv_file = "/home/u/ros2_ws/src/ros2_end/esp32_receiver/data/dqn_parameters.csv"
 
-# 取得每個 state 的所有 Q-values
-all_q_values = [q for actions in q_table.values() for q in actions.values()]
+# 儲存 (episode, reward) 配對，方便同步排序
+data_points = []
 
-# 取得每個 state 的最大 Q-value
-max_q_per_state = [max(actions.values()) for actions in q_table.values()]
+# 開啟 CSV，讓 DictReader 自動讀標題列
+with open(csv_file, newline='', encoding='utf-8') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        try:
+            step = int(row["episode"])
+            # status = row["reason"] # 不再需要，可以註釋掉
+            reward = float(row["score"])
+        except ValueError:
+            # 如果 episode 或 score 不能轉成數字就跳過
+            continue
+        
+        # 將 (episode, reward) 組合成一個元組存入列表
+        data_points.append((step, reward))
 
-# 畫出所有 Q-values 的分布
-plt.figure(figsize=(10, 5))
-plt.plot(sorted(all_q_values), label="All Q-values")
-plt.plot(sorted(max_q_per_state), label="Max Q-value per state", linestyle="--")
-plt.title("Q-Value Distribution")
-plt.xlabel("States / Actions (sorted)")
-plt.ylabel("Q-Value")
-plt.legend()
-plt.grid(True)
+## 關鍵的排序步驟
+# 根據元組的第一個元素 (step/episode) 進行升序排序
+# key=lambda x: x[0] 表示以 data_points 列表中每個元組的第0個元素 (episode) 作為排序依據
+sorted_data = sorted(data_points, key=lambda x: x[0])
+
+# 將排序後的資料重新拆分為 steps 和 scores 兩個列表
+steps = [point[0] for point in sorted_data]
+scores = [point[1] for point in sorted_data]
+
+
+# 畫圖
+plt.figure(figsize=(16,6))
+# plt.scatter(steps, scores, c=colors, s=50, label="Data points") # 您的原代碼中沒有定義 colors
+plt.plot(steps, scores)  # 連線方便觀察趨勢
+plt.xlabel("episode")
+plt.ylabel("reward")
+plt.title("Robot Task Results (Sorted by Episode)")
+plt.grid(True) # 加上網格線，視覺化效果更好
 plt.show()

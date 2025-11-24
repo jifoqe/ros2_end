@@ -35,7 +35,7 @@ def generate_launch_description():
             output='screen'
         ),
 
-        #顯示網頁送過來的資料
+        # 顯示網頁送過來的資料
         Node(
             package='esp32_receiver',
             executable='web_sub',

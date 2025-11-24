@@ -41,6 +41,15 @@ ament_target_dependencies(web_sub rclcpp std_msgs)
 add_executable(image_subscriber src/image_subscriber.cpp)
 ament_target_dependencies(image_subscriber rclcpp sensor_msgs cv_bridge OpenCV)
 
+#麥克那母輪
+# add_library(gazebo_mecanum_drive SHARED src/gazebo_mecanum_drive.cpp)
+
+# install(
+#   TARGETS gazebo_mecanum_drive
+#   LIBRARY DESTINATION lib
+# )
+
+
 ament_target_dependencies(image_subscriber
   rclcpp
   sensor_msgs
