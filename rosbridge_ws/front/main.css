@@ -1,0 +1,384 @@
+/* ========================================= */
+/* I. 全域與基礎設定 */
+/* ========================================= */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f9; /* 淺灰色背景 */
+    color: #333;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #007bff; /* 品牌藍色 */
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+/* ========================================= */
+/* II. 佈局結構 */
+/* ========================================= */
+
+.container {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* 影像佔 2/3, 控制佔 1/3 */
+    gap: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+/* 卡片樣式 (用於區塊分隔) */
+.card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.x_y_position{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    text-align: center;
+}
+
+.card h2 {
+    color: #007bff;
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+    font-size: 1.4em;
+}
+
+/* 左側區塊：影像和機台狀態 */
+.video-feed-section {
+    grid-column: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.video-card {
+    flex-grow: 1; /* 讓影像卡片佔據剩餘空間 */
+}
+
+/* 右側區塊：控制面板 */
+.control-panel-section {
+    grid-column: 2 / 3;
+}
+
+
+/* ========================================= */
+/* III. 元素樣式 (影像與控制) */
+/* ========================================= */
+
+.image-display-wrapper {
+    text-align: center;
+    background-color: #000;
+    border-radius: 4px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+#cam {
+    display: block;
+    width: 100%;
+    max-height: 500px; /* 限制高度，避免機台狀態區塊被擠壓 */
+    object-fit: contain; 
+}
+
+.video-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#image_change {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+}
+
+/* 按鈕組樣式 */
+.button-group {
+    display: flex; /* 確保按鈕橫向排列 */
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* 基礎按鈕樣式 */
+.action-btn {
+    padding: 12px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+    flex-grow: 1; /* 這是讓按鈕平均分散並填滿寬度的關鍵 */
+    min-width: 80px;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 顏色定義 */
+.primary { background-color: #28a745; color: white; }
+.primary:hover { background-color: #218838; }
+
+.secondary { background-color: #6c757d; color: white; }
+.secondary:hover { background-color: #5a6268; }
+
+.tertiary { background-color: #e9ecef; color: #333; }
+.tertiary:hover { background-color: #d8dee3; }
+
+.danger { background-color: #dc3545; color: white; }
+.danger:hover { background-color: #c82333; }
+
+/* 方向控制特化排版 (模擬方向盤) */
+.movement-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    width: 280px;
+    margin: 15px auto 0 auto; /* 調整上邊距 */
+}
+
+.movement-controls .up { grid-column: 2 / 3; grid-row: 1 / 2; }
+.movement-controls .left { grid-column: 1 / 2; grid-row: 2 / 3; }
+.movement-controls .stop { grid-column: 2 / 3; grid-row: 2 / 3; }
+.movement-controls .right { grid-column: 3 / 4; grid-row: 2 / 3; }
+.movement-controls .down { grid-column: 2 / 3; grid-row: 3 / 4; }
+
+/* 表單樣式 */
+.advanced-control-card form { display: flex; flex-direction: column; gap: 15px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-weight: bold; margin-bottom: 5px; color: #495057; }
+input[type="number"], select {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.form-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
+
+
+/* ========================================= */
+/* IV. 新增區塊排版 */
+/* ========================================= */
+
+/* 機台狀況卡片 */
+.basic-control-card:nth-child(2) {
+    flex-shrink: 0;
+}
+
+/* 機台數據列 (Grid 佈局) - 優化為兩行顯示 */
+.basic-control-card > div {
+    /* 定義一個包含兩行的 Grid 容器 */
+    display: grid;
+    /* 欄位分配：機台名 | 電量標籤 | 電量值 | 速度標籤 | 速度值 | 角速標籤 | 角速值 | 按鈕(佔兩行) */
+    grid-template-columns: 1.5fr 1fr 1.2fr 1fr 1.2fr 1fr 1.2fr 1.5fr; /* 8 欄 (6欄數據 + 機台名 + 按鈕) */
+    grid-template-rows: auto auto; /* 兩行 */
+    
+    gap: 8px 15px; /* 垂直和水平間距 */
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef; 
+    font-size: 0.95em;
+}
+
+.basic-control-card > div:last-child {
+    border-bottom: none;
+}
+
+/* 數據標籤和數值的共同樣式 */
+.basic-control-card > div p {
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* 標籤樣式 (電量, 速度, 角速度, 位置... 的名稱) */
+.basic-control-card > div p:nth-child(2n) {
+    color: #6c757d;
+    font-weight: normal;
+    text-align: right; 
+}
+
+/* 數值樣式 (60%, 10m, (1,2) ) */
+.basic-control-card > div p:nth-child(2n + 1):not(:first-child) {
+    font-weight: bold;
+    color: #495057;
+    text-align: left;
+}
+
+
+/* 機台名稱 - 垂直跨越兩行 */
+.basic-control-card > div p:nth-child(1) { 
+    grid-column: 1 / 2;
+    grid-row: 1 / span 2; /* 垂直跨越兩行 */
+    font-weight: bold;
+    color: #007bff;
+    font-size: 1.15em;
+    align-self: flex-start; /* 讓機台名靠上對齊 */
+    padding-top: 5px;
+}
+
+/* --- 第一行數據 (基本狀態) --- */
+
+/* 電量: P2, P3 佔 G2, G3 */
+.basic-control-card > div p:nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; }
+.basic-control-card > div p:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 2; color: #28a745; } /* 電量值綠色強調 */
+
+/* 速度: P4, P5 佔 G4, G5 */
+.basic-control-card > div p:nth-child(4) { grid-column: 4 / 5; grid-row: 1 / 2; }
+.basic-control-card > div p:nth-child(5) { grid-column: 5 / 6; grid-row: 1 / 2; }
+
+/* 角速度: P6, P7 佔 G6, G7 */
+.basic-control-card > div p:nth-child(6) { grid-column: 6 / 7; grid-row: 1 / 2; }
+.basic-control-card > div p:nth-child(7) { grid-column: 7 / 8; grid-row: 1 / 2; }
+
+
+/* --- 第二行數據 (位置資訊) --- */
+
+/* 當前位置: P8, P9 */
+/* P8, P9 佔用原本第二個數據的位置 (G2, G3)，但位於第二行 */
+.basic-control-card > div p:nth-child(8) { 
+    grid-column: 2 / 3; 
+    grid-row: 2 / 3; 
+    color: #007bff; 
+    text-align: left; /* 位置標籤從左側開始，不跟前面的右對齊 */
+}
+.basic-control-card > div p:nth-child(9) { grid-column: 3 / 4; grid-row: 2 / 3; } /* 當前位置值 */
+
+/* 目標位置: P10, P11 */
+/* P10, P11 佔用原本第三個數據的位置 (G4, G5)，但位於第二行 */
+.basic-control-card > div p:nth-child(10) { 
+    grid-column: 4 / 5; 
+    grid-row: 2 / 3; 
+    color: #007bff; 
+    text-align: left;
+}
+.basic-control-card > div p:nth-child(11) { grid-column: 5 / 6; grid-row: 2 / 3; } /* 目標位置值 */
+
+
+/* 緊急停止按鈕 - 垂直跨越兩行 */
+.basic-control-card > div button { 
+    grid-column: 8 / 9; /* 佔據最後一欄 */
+    grid-row: 1 / span 2; /* 垂直跨越兩行 */
+    padding: 10px 5px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 1em;
+}
+.basic-control-card > div button:hover {
+    background-color: #c82333;
+}
+
+
+/* 基礎方向控制區內的選取 (Checkbox/Radio) */
+.movement-control-card > div:first-of-type {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.movement-control-card label {
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* 確保 Checkbox/Radio Button 和 Label 對齊 */
+.movement-control-card input[type="radio"],
+.movement-control-card input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+
+/* ========================================= */
+/* V. 響應式調整 */
+/* ========================================= */
+
+@media (max-width: 900px) {
+    .container {
+        grid-template-columns: 1fr; /* 小螢幕時只佔一欄 */
+    }
+    .video-feed-section, .control-panel-section {
+        grid-column: 1 / 2;
+    }
+    
+    /* 小螢幕時，機台狀態改為單行緊湊佈局 */
+    .basic-control-card > div {
+        /* 縮減為 5 欄：機台名 | 電量 | 速度 | 位置 | 按鈕 */
+        grid-template-columns: 1.2fr 1.5fr 1.5fr 2fr 1.5fr; 
+        grid-template-rows: auto; /* 變回單行 */
+        font-size: 0.85em;
+        gap: 5px 10px;
+        padding: 8px 0;
+    }
+
+    /* 將所有元素移至第一行，並取消垂直跨越 */
+    .basic-control-card > div p,
+    .basic-control-card > div button {
+        grid-row: 1 / 2 !important; /* 強制所有元素回到單行 */
+    }
+
+    /* 隱藏較不重要的數據 */
+    .basic-control-card > div p:nth-child(4), /* 速度標籤 */
+    .basic-control-card > div p:nth-child(6), /* 角速度標籤 */
+    .basic-control-card > div p:nth-child(7), /* 角速度值 */
+    .basic-control-card > div p:nth-child(10), /* 目標位置標籤 */
+    .basic-control-card > div p:nth-child(11) { /* 目標位置值 */
+        display: none;
+    }
+    
+    /* 重新定位保留下來的元素，使用標籤/值佔用寬欄位 */
+    .basic-control-card > div p:nth-child(1) { grid-column: 1 / 2; } /* 機台名稱 (1) */
+    
+    /* 電量: P2(標籤) P3(值) 組合佔用第二欄 */
+    .basic-control-card > div p:nth-child(2) { grid-column: 2 / 3; text-align: right; }
+    .basic-control-card > div p:nth-child(3) { grid-column: 3 / 4; text-align: left; }
+    
+    /* 速度值: P5 佔用第四欄 (P4 標籤被隱藏) */
+    .basic-control-card > div p:nth-child(5) { grid-column: 3 / 4; text-align: left; }
+    
+    /* 當前位置: P8(標籤) P9(值) 組合佔用第五欄 */
+    .basic-control-card > div p:nth-child(8) { grid-column: 4 / 5; text-align: right; color: #007bff; } 
+    .basic-control-card > div p:nth-child(9) { grid-column: 5 / 6; text-align: left; }
+
+    /* 將緊急停止按鈕移動到最後一欄 */
+    .basic-control-card > div button { 
+        grid-column: 6 / 7;
+        font-size: 0.85em;
+        padding: 5px;
+    }
+}

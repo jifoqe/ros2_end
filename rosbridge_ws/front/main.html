@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROS2 遠端控制介面</title>
+  <link rel="stylesheet" href="main.css"> 
+   <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>ROS2 遠端控制介面</h1>
+    </header>
+
+    <main class="container">
+        <section class="video-feed-section">
+            <div class="card video-card">
+                <h2>即時影像</h2>
+                <div class="video-controls">
+                    <label for="image_change">影像來源:</label>
+                    <select id="image_change">
+                        <option value="前">原圖 (raw)</option>
+                        <option value="後">影像處理圖 (processed)</option>
+                        <option value="左">控制模式 (control mode)</option>
+                    </select>
+                </div>
+                <div class="image-display-wrapper">
+                    <img id="cam" src="http://10.50.65.22:8080/stream?topic=/camera_image" alt="即時影像串流">
+                </div>
+                <div class="x_y_position">
+                    <p>x:</p>
+                    <p id="mouse_x">0</p>
+                    <p>y:</p>
+                    <p id="mouse_y">0</p>
+                </div>
+            </div>
+            <div class="card basic-control-card">
+                <h2>當前機台狀況</h2>
+                <div>
+                    <p>機台1</p>
+                    <p>電量：</p>
+                    <p>60%</p>
+                    <p>速度：</p>
+                    <p>10m</p>
+                    <p>角速度：</p>
+                    <p>10m</p>
+                    <p>當前位置：</p>
+                    <p>(1,2)</p>
+                    <p>目標位置：</p>
+                    <p>(1,2)</p>
+                    <button>緊急停止</button>
+                </div>
+                <div>
+                    <p>機台2</p>
+                    <p>電量：</p>
+                    <p>60%</p>
+                    <p>速度：</p>
+                    <p>10m</p>
+                    <p>角速度：</p>
+                    <p>10m</p>
+                    <p>當前位置：</p>
+                    <p>(1,2)</p>
+                    <p>目標位置：</p>
+                    <p>(1,2)</p>
+                    <button>緊急停止</button>
+                </div>
+                <div>
+                    <p>機台3</p>
+                    <p>電量：</p>
+                    <p>60%</p>
+                    <p>速度：</p>
+                    <p>10m</p>
+                    <p>角速度：</p>
+                    <p>10m</p>
+                    <p>當前位置：</p>
+                    <p>(1,2)</p>
+                    <p>目標位置：</p>
+                    <p>(1,2)</p>
+                    <button>緊急停止</button>
+                </div>
+                <div>
+                    <p>機台4</p>
+                    <p>電量：</p>
+                    <p>60%</p>
+                    <p>速度：</p>
+                    <p>10m</p>
+                    <p>角速度：</p>
+                    <p>10m</p>
+                    <p>當前位置：</p>
+                    <p>(1,2)</p>
+                    <p>目標位置：</p>
+                    <p>(1,2)</p>
+                    <button>緊急停止</button>
+                </div>
+                <div>
+                    <p>機台5</p>
+                    <p>電量：</p>
+                    <p>60%</p>
+                    <p>速度：</p>
+                    <p>10m</p>
+                    <p>角速度：</p>
+                    <p>10m</p>
+                    <p>當前位置：</p>
+                    <p>(1,2)</p>
+                    <p>目標位置：</p>
+                    <p>(1,2)</p>
+                    <button>緊急停止</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="control-panel-section">
+            
+            <div class="card basic-control-card">
+                <h2>快速測試通訊</h2>
+                <div class="button-group">
+                    <button class="action-btn primary" onclick="sendMsg(1)">1</button>
+                    <!-- <button class="action-btn primary" onclick="sendMsg(2)">2</button>
+                    <button class="action-btn primary" onclick="sendMsg(3)">3</button> -->
+                </div>
+            </div>
+
+            <div class="card function-selection-card">
+                <h2>功能模式選擇</h2>
+                <div class="button-group grid-2">
+                    <button class="action-btn secondary" onclick="">基礎方向控制</button>
+                    <button class="action-btn secondary" onclick="">繪圖控制</button>
+                    <button class="action-btn secondary" onclick="">全自動導航</button>
+                    <button class="action-btn secondary" onclick="">其他設定</button>
+                </div>
+            </div>
+
+            <div class="card movement-control-card">
+                <h2>基礎方向控制</h2>
+                <div id="vehicle-select-two">
+                    <input type="checkbox" id="vehicle1_check" name="vehicle_select_group" value="1" checked>
+                    <label for="vehicle1_check">機台1</label>
+                    
+                    <input type="checkbox" id="vehicle2_check" name="vehicle_select_group" value="2">
+                    <label for="vehicle2_check">機台2</label>
+                    
+                    <input type="checkbox" id="vehicle3_check" name="vehicle_select_group" value="3">
+                    <label for="vehicle3_check">機台3</label>
+                    
+                    <input type="checkbox" id="vehicle4_check" name="vehicle_select_group" value="4">
+                    <label for="vehicle4_check">機台4</label>
+                    
+                    <input type="checkbox" id="vehicle5_check" name="vehicle_select_group" value="5">
+                    <label for="vehicle5_check">機台5</label>
+                </div>
+                <div class="movement-controls">
+                    <button class="action-btn tertiary up" onclick="send_direction('1')">⬆️ 前 (Front)</button>
+                    <button class="action-btn tertiary left" onclick="send_direction('3')">⬅️ 左轉 (Lift)</button>
+                    <button class="action-btn danger stop" onclick="send_direction('5')">🛑 停 (Stop)</button>
+                    <button class="action-btn tertiary right" onclick="send_direction('4')">➡️ 右轉 (Right)</button>
+                    <button class="action-btn tertiary down" onclick="send_direction('2')">⬇️ 後 (Back)</button>
+                </div>
+            </div>
+
+            <div class="card advanced-control-card">
+                <h2>進階運動參數設定</h2>
+                <!-- <form onsubmit="event.preventDefault(); sendVelocityControl();"> -->
+                    <div class="form-group">
+                        <label for="vehicle-select">選擇車輛:</label>
+                        <select id="vehicle-select" name="vehicle-select">
+                            <option value="1">車輛1</option>
+                            <option value="2">車輛2</option>
+                            <option value="3">車輛3</option>
+                            <option value="4">車輛4</option>
+                            <option value="5">車輛5</option>
+                            <option value="6">全部</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linear-speed">線速度 (m/s):</label>
+                        <input type="number" id="linear-speed" value="0.5" step="0.1" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="angular-speed">角速度 (rad/s):</label>
+                        <input type="number" id="angular-speed" value="0.0" step="0.1" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="action-btn secondary">重設</button>
+                        <button type="submit" class="action-btn primary">送出速度指令</button>
+                    </div>
+                <!-- </form> -->
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        /* ========================================= */
+        /* I. ROS的連接 */
+        /* ========================================= */
+        const ros = new ROSLIB.Ros({
+            url: "ws://10.50.65.22:9090"
+        });
+
+        ros.on('connection', () => { console.log('已連接到 rosbridge'); });
+        ros.on('error', (error) => { console.log('連線錯誤: ', error); });
+        ros.on('close', () => { console.log('連線關閉'); });
+
+        // 建立 publisher
+        const pub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/web_input',
+        messageType: 'std_msgs/String'
+        });
+
+        /* ========================================= */
+        /* II. 功能1基本控制 */
+        /* ========================================= */
+        // 發送訊息 (用於快速測試和基礎方向控制)
+        function sendMsg(data) {
+            const msg = new ROSLIB.Message({ data: String(data) });
+            pub.publish(msg);
+            console.log("已發送:", data);
+        }
+
+        let car_number = []; // 存放選中的車輛
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const checkboxes = document.querySelectorAll("#vehicle-select-two input[type='checkbox']");
+
+            checkboxes.forEach((cb) => {
+                cb.addEventListener("change", () => {
+                    // 收集所有被勾選的值
+                    car_number = Array.from(checkboxes)
+                                    .filter(c => c.checked)
+                                    .map(c => c.value);
+                    console.log("目前選擇車輛:", car_number);
+                });
+            });
+        });
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const checkboxes = document.querySelectorAll("#vehicle-select-two input[type='checkbox']");
+
+            checkboxes.forEach((cb) => {
+                cb.addEventListener("change", () => {
+                    // 收集所有被勾選的值
+                    car_number = Array.from(checkboxes)
+                                    .filter(c => c.checked)
+                                    .map(c => c.value);
+                    console.log("目前選擇車輛:", car_number);
+                });
+            });
+        });
+
+        function send_direction(data) {
+            let newString = "1";
+            newString += String(data);
+            for (let i = 0; i < car_number.length; i++) {
+                newString += car_number[i];  // 將每個車輛號碼接上
+            }
+            
+            const msg = new ROSLIB.Message({ data: newString });
+            pub.publish(msg);
+            console.log("已發送:", newString);
+        }
+
+        /* ========================================= */
+        /* III. 功能2繪圖控制 */
+        /* ========================================= */
+        //滑鼠座標
+        document.addEventListener("mousemove", function(event) {
+            // event.clientX, event.clientY = 滑鼠在視窗的座標
+            document.getElementById("mouse_x").innerText = event.clientX;
+            document.getElementById("mouse_y").innerText = event.clientY;
+        });
+
+        // 尚未實作 sendVelocityControl() 函式，用於送出速度/角速度
+        function sendVelocityControl() {
+            console.log("此功能需要額外 ROS 節點處理速度指令");
+            // 這裡將是您未來撰寫 JS 邏輯的地方
+        }
+    </script>
+</body>
+</html>

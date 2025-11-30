@@ -24,9 +24,9 @@
                 <odometryTopic>odom</odometryTopic>
                 <odometryFrame>odom</odometryFrame>
                 <robotBaseFrame>base_footprint</robotBaseFrame>
-                <LeftRear>back_left_wheel_joint</LeftRear>
                 <LeftFront>front_left_wheel_joint</LeftFront>
                 <RightFront>front_right_wheel_joint</RightFront>
+                <LeftRear>back_left_wheel_joint</LeftRear>
                 <RightRear>back_right_wheel_joint</RightRear>
                 <odometryRate>20</odometryRate>      
                 <publishWheelTF>true</publishWheelTF>
