@@ -12,12 +12,26 @@ class UdpServerNode : public rclcpp::Node
 public:
     UdpServerNode() : Node("udp_server_node")
     {
+        publisher_ = this->create_publisher<std_msgs::msg::String>("/web_output", 10);
+        // 每秒定時傳訊息給 web
+        timer_ = this->create_wall_timer(
+            std::chrono::seconds(1),
+            [this]() {
+                std_msgs::msg::String msg;
+                msg.data = "Hello from C++ node!";
+                publisher_->publish(msg);
+                RCLCPP_INFO(this->get_logger(), "已傳送給 web: %s", msg.data.c_str());
+            }
+        );
+        // esp32_date.data = "Hello from C++ node!";
+        // publisher_->publish(esp32_date);
+
         subscription_ = this->create_subscription<std_msgs::msg::String>(
             "/web_ros_date", 10,
             [this](std_msgs::msg::String::SharedPtr msg) {
                 std::string s = msg->data;   // string
                 RCLCPP_INFO(this->get_logger(), "收到: '%s'", s.c_str());
-                function_number = std::stoi(s);
+                web_date = std::stoi(s);
             }
         );
 
@@ -68,11 +82,11 @@ public:
 private:
     void send_numbers()
     {
-        if(function_number!="0"){
-            std::string msg = function_number;
+        if(web_date!="0"){
+            std::string msg = web_date;
             sendto(sockfd_, msg.c_str(), msg.size(), 0,
                 (struct sockaddr*)&client_addr_, sizeof(client_addr_));
-            function_number = "0";
+            web_date = "0";
             RCLCPP_INFO(this->get_logger(), "Sent: %s", msg.c_str());
         }
 
@@ -99,12 +113,17 @@ private:
     std::string client_ip_ = "192.168.1.100"; // ESP32 IP，請改成實際 IP
     int client_port_ = 8888;        // ESP32 接收 port
     sockaddr_in client_addr_;
-    std::string function_number = "0";
+
+    std::string web_date = "0";
+    std_msgs::msg::String esp32_date;
 
     rclcpp::TimerBase::SharedPtr send_timer_;
     rclcpp::TimerBase::SharedPtr recv_timer_;
+    rclcpp::TimerBase::SharedPtr timer_;
+
 
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
 };
 
 int main(int argc, char* argv[])

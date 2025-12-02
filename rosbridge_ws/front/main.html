@@ -267,6 +267,25 @@
             messageType: 'std_msgs/String'
         });
 
+        // 建立 subscriber
+        const sub = new ROSLIB.Topic({
+            ros: ros,
+            name: '/web_output',        // ⭐你要接收的 Topic
+            messageType: 'std_msgs/String'
+        });
+
+        // 訂閱並接收資料
+        sub.subscribe((msg) => {
+            console.log("收到來自 ROS 的訊息:", msg.data);
+
+            // 你要在畫面更新也可以，例如：
+            const outputDiv = document.getElementById("ros-output");
+            if (outputDiv) {
+                outputDiv.innerText = msg.data;
+            }
+        });
+
+
         /* ========================================= */
         /* I. 功能1基本控制 */
         /* ========================================= */
