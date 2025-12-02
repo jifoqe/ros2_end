@@ -1,3 +1,16 @@
+<p>當前位置：</p>  <p>(1,2)</p>      <p>目標位置：</p>  <p id="..." onclick="..."> 設定目標 </p> <p>距離：</p>      <p> 無資料 </p>   <div class="machine-actions-group">...</div> ```
+
+要讓它塞進去，最簡單的方法是讓 **`距離` (P12, P13)** 覆蓋掉 **`目標位置` (P10, P11)** 的空間。
+
+我將把 **P10 和 P11 的顏色** 換成 **P12 和 P13 的顏色**，並讓 **P12/P13 覆蓋 P10/P11 的位置**。
+
+### 🎨 調整後的 CSS (將「目標位置」替換成「距離」的顏色和位置)
+
+我會假設您希望將原本的「目標位置」欄位用於顯示「距離」資訊。
+
+以下是完整的 CSS，只修改了 **`IV. 新增區塊排版`** 中與定位和顏色相關的規則，**保持 Grid 欄位數目不變**：
+
+```css
 /* ========================================= */
 /* I. 全域與基礎設定 */
 /* ========================================= */
@@ -125,7 +138,8 @@ header h1 {
 }
 
 /* 基礎按鈕樣式 */
-.action-btn {
+.action-btn ,
+.action-btn-function{
     padding: 12px 15px;
     border: none;
     border-radius: 4px;
@@ -136,10 +150,33 @@ header h1 {
     min-width: 80px;
 }
 
-.action-btn:hover {
+.action-btn-function {
+    background-color: #e0e0e0; /* 預設的淺灰色 */
+    color: #333; /* 預設的文字顏色 */
+}
+
+.action-btn:hover ,
+.action-btn-function:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+/* --- 點擊後的樣式 (Active State) --- */
+.action-btn-function.active {
+    background-color: #007bff; /* 醒目的藍色，作為主要顏色 */
+    color: white; /* 白色文字，與藍色背景形成對比 */
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* 增加選中時的陰影 */
+}
+
+/* 為了讓您的範例能跑起來，我補上 button-group 的簡單樣式 */
+.button-group {
+    display: flex;
+    gap: 10px; /* 按鈕之間的間距 */
+    width: 100%; /* 確保它能佔滿父容器 */
+    max-width: 600px;
+    margin: 20px 0;
+}
+
 
 /* 顏色定義 */
 .primary { background-color: #28a745; color: white; }
@@ -195,9 +232,8 @@ input[type="number"], select {
 
 /* 機台數據列 (Grid 佈局) - 優化為兩行顯示 */
 .basic-control-card > div {
-    /* 定義一個包含兩行的 Grid 容器 */
+    /* 保持 8 欄 */
     display: grid;
-    /* 欄位分配：機台名 | 電量標籤 | 電量值 | 速度標籤 | 速度值 | 角速標籤 | 角速值 | 按鈕(佔兩行) */
     grid-template-columns: 1.5fr 1fr 1.2fr 1fr 1.2fr 1fr 1.2fr 1.5fr; /* 8 欄 (6欄數據 + 機台名 + 按鈕) */
     grid-template-rows: auto auto; /* 兩行 */
     
@@ -260,10 +296,9 @@ input[type="number"], select {
 .basic-control-card > div p:nth-child(7) { grid-column: 7 / 8; grid-row: 1 / 2; }
 
 
-/* --- 第二行數據 (位置資訊) --- */
+/* --- 第二行數據 (位置資訊 & 新增的距離) --- */
 
-/* 當前位置: P8, P9 */
-/* P8, P9 佔用原本第二個數據的位置 (G2, G3)，但位於第二行 */
+/* 當前位置: P8, P9 佔 G2, G3 */
 .basic-control-card > div p:nth-child(8) { 
     grid-column: 2 / 3; 
     grid-row: 2 / 3; 
@@ -272,35 +307,56 @@ input[type="number"], select {
 }
 .basic-control-card > div p:nth-child(9) { grid-column: 3 / 4; grid-row: 2 / 3; } /* 當前位置值 */
 
-/* 目標位置: P10, P11 */
-/* P10, P11 佔用原本第三個數據的位置 (G4, G5)，但位於第二行 */
+/* 💡 原本的 目標位置 (P10, P11) 被覆蓋 */
+
+/* 💡 新增：目標位置 (P12) 標籤 */
 .basic-control-card > div p:nth-child(10) { 
     grid-column: 4 / 5; 
     grid-row: 2 / 3; 
-    color: #007bff; 
+    color: #007bff; /* 保持藍色 */
     text-align: left;
 }
-.basic-control-card > div p:nth-child(11) { grid-column: 5 / 6; grid-row: 2 / 3; } /* 目標位置值 */
+/* 💡 新增：目標位置 (P13) 數值 */
+.basic-control-card > div p:nth-child(11) { grid-column: 5 / 6; grid-row: 2 / 3; } 
 
 
-/* 緊急停止按鈕 - 垂直跨越兩行 */
-.basic-control-card > div button { 
-    grid-column: 8 / 9; /* 佔據最後一欄 */
+/* 💡 將 P12, P13 (原本的距離) 顏色替換成 P10, P11 的顏色 */
+/* 距離：(P12) 標籤 */
+.basic-control-card > div p:nth-child(12) {
+    grid-column: 6 / 7; /* 使用原本給角速度的位置 */
+    grid-row: 2 / 3;
+    color: #007bff; /* 保持藍色標籤 */
+    text-align: left;
+}
+/* 無資料 (P13) 數值 */
+.basic-control-card > div p:nth-child(13) {
+    grid-column: 7 / 8; /* 使用原本給角速度的位置 */
+    grid-row: 2 / 3;
+    font-weight: bold;
+    color: #dc3545; /* 距離數值使用紅色強調 */
+    text-align: left;
+}
+
+
+/* --- 機台操作按鈕群組排版 (Start/Stop) --- */
+.machine-actions-group {
+    grid-column: 8 / 9; /* 保持佔據最後一欄 */
     grid-row: 1 / span 2; /* 垂直跨越兩行 */
-    padding: 10px 5px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    
+    display: flex;
+    flex-direction: column; /* 讓按鈕垂直堆疊 */
+    gap: 5px; /* 按鈕之間的間距 */
+    align-items: stretch; /* 讓按鈕填滿容器寬度 */
+    justify-content: center; /* 讓按鈕組垂直居中 */
+}
+
+/* 針對按鈕群組內的按鈕調整基礎樣式 */
+.machine-actions-group button {
+    padding: 8px 5px; /* 稍微縮小內邊距，讓兩按鈕都能在兩行內顯示 */
+    font-size: 0.9em;
     font-weight: bold;
     white-space: nowrap;
-    font-size: 1em;
 }
-.basic-control-card > div button:hover {
-    background-color: #c82333;
-}
-
 
 /* 基礎方向控制區內的選取 (Checkbox/Radio) */
 .movement-control-card > div:first-of-type {
@@ -338,7 +394,7 @@ input[type="number"], select {
     
     /* 小螢幕時，機台狀態改為單行緊湊佈局 */
     .basic-control-card > div {
-        /* 縮減為 5 欄：機台名 | 電量 | 速度 | 位置 | 按鈕 */
+        /* 保持 5 欄 */
         grid-template-columns: 1.2fr 1.5fr 1.5fr 2fr 1.5fr; 
         grid-template-rows: auto; /* 變回單行 */
         font-size: 0.85em;
@@ -348,7 +404,7 @@ input[type="number"], select {
 
     /* 將所有元素移至第一行，並取消垂直跨越 */
     .basic-control-card > div p,
-    .basic-control-card > div button {
+    .basic-control-card > div .machine-actions-group { 
         grid-row: 1 / 2 !important; /* 強制所有元素回到單行 */
     }
 
@@ -375,10 +431,22 @@ input[type="number"], select {
     .basic-control-card > div p:nth-child(8) { grid-column: 4 / 5; text-align: right; color: #007bff; } 
     .basic-control-card > div p:nth-child(9) { grid-column: 5 / 6; text-align: left; }
 
-    /* 將緊急停止按鈕移動到最後一欄 */
-    .basic-control-card > div button { 
+    /* 💡 新增：距離 (P12, P13) 覆蓋目標位置的位置 */
+    .basic-control-card > div p:nth-child(12) { 
+        grid-column: 4 / 5; 
+        text-align: right; 
+        color: #007bff; 
+    }
+    .basic-control-card > div p:nth-child(13) { 
+        grid-column: 5 / 6; 
+        text-align: left;
+        color: #dc3545; /* 距離數值紅色 */
+    }
+
+    /* 將按鈕群組移動到最後一欄 */
+    .basic-control-card > div .machine-actions-group { 
         grid-column: 6 / 7;
         font-size: 0.85em;
-        padding: 5px;
+        padding: 0;
     }
 }

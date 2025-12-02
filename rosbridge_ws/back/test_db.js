@@ -1,5 +1,6 @@
 // http://localhost:3000/api/data
 // http://localhost:3000/api/update_machine
+// http://localhost/phpmyadmin/index.php?route=/&route=%2F
 // 建立 MySQL 連線
 const mysql = require('mysql2');
 const express = require("express");

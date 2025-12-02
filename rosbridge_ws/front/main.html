@@ -36,6 +36,7 @@
                 </div>
                 <div class="image-display-wrapper">
                     <img id="cam" src="http://10.50.65.22:8080/stream?topic=/camera_image" alt="即時影像串流">
+                    <canvas id="drawCanvas" style="position: absolute; left: 0; top: 0;"></canvas>
                 </div>
                 <div class="x_y_position">
                     <p>x:</p>
@@ -69,6 +70,8 @@
         container.innerHTML = ""; // 先清空
         sql_data.forEach(machine => {
             const div = document.createElement("div");
+            const localId = `local-pos-${machine.car_number}`;
+            const targetId = `target-pos-${machine.car_number}`;
 
             div.innerHTML = `
                 <p>機台 ${machine.car_number}</p>
@@ -79,10 +82,15 @@
                 <p>角速度：</p>
                 <p>${machine.angle_speed} m/s</p>
                 <p>當前位置：</p>
-                <p>(1,2)</p>
+                <p id="${localId}">(1,2)</p>
                 <p>目標位置：</p>
-                <p>(1,2)</p>
-                <button onclick="emergencyStop(${machine.car_number})">緊急停止</button>
+                <p id="${targetId}" onclick="editTarget('${targetId}')"> 設定目標 </p>
+                <p>距離：</p>
+                <p> 無資料 </p>
+                <div class="machine-actions-group">
+                    <button class="action-btn primary" onclick="startMoving(${machine.car_number}, '${localId}', '${targetId}')">出發</button>
+                    <button class="action-btn danger" onclick="emergencyStop(${machine.car_number})">緊急停止</button>
+                </div>
             `;
             container.appendChild(div);
         });
@@ -114,10 +122,10 @@
             <div class="card function-selection-card">
                 <h2>功能模式選擇</h2>
                 <div class="button-group grid-2">
-                    <button class="action-btn secondary" onclick="">基礎方向控制</button>
-                    <button class="action-btn secondary" onclick="">繪圖控制</button>
-                    <button class="action-btn secondary" onclick="">全自動導航</button>
-                    <button class="action-btn secondary" onclick="">其他設定</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="1">基礎方向控制</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="2">定點移動</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="3">繪圖控制</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">多機導航</button>
                 </div>
             </div>
 
@@ -223,7 +231,26 @@
 
     <script>
         /* ========================================= */
-        /* I. ROS的連接 */
+        /* 全域參數*/
+        /* ========================================= */
+        let newString = "0";
+
+        /* ========================================= */
+        /* 功能選擇 */
+        /* ========================================= */
+        function selectMode(button) {
+            // 1. 把所有按鈕的 active 拿掉
+            document.querySelectorAll('.action-btn-function').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            newString = button.name
+
+            // 2. 把點到的按鈕變成 active
+            button.classList.add('active');
+        }
+
+        /* ========================================= */
+        /* ROS的連接 */
         /* ========================================= */
         const ros = new ROSLIB.Ros({
             url: "ws://10.50.65.22:9090"
@@ -241,7 +268,7 @@
         });
 
         /* ========================================= */
-        /* II. 功能1基本控制 */
+        /* I. 功能1基本控制 */
         /* ========================================= */
         // 發送訊息 (用於快速測試和基礎方向控制)
 
@@ -263,7 +290,11 @@
         });
 
         function send_direction(data) {
-            let newString = "1";
+            if (newString!="1"){
+                alert("只有功能一才能使用")
+                return
+            }
+
             newString += String(data);
             for (let i = 0; i < car_number.length; i++) {
                 newString += car_number[i];  // 將每個車輛號碼接上
@@ -276,8 +307,74 @@
         }
 
         /* ========================================= */
+        /* II. 定點控制 */
+        /* ========================================= */
+        function editTarget(id) {
+            const target = document.getElementById(id);
+
+            let value = prompt("請輸入新的目標位置格式：x,y：", target.innerText.trim());
+
+            // 使用者按取消
+            if (value === null) return;
+
+            // 簡單檢查格式
+            if (!/^\s*-?\d+\s*,\s*-?\d+\s*$/.test(value)) {
+                alert("格式錯誤！請使用 x,y 格式，例如 3,5");
+                return;
+            }
+
+            target.innerText = "(" + value + ")";
+        }
+
+        function startMoving(car_number, local, goal) {
+            if (newString != "2") {
+                alert("只有功能二才能使用");
+                return;
+            }
+
+            const local_position = document.getElementById(local);
+            const goal_position = document.getElementById(goal);
+
+            if (goal_position.innerText.trim() === "設定目標") {
+                alert("請先設定目標");
+                return;
+            }
+
+            const localText = local_position.innerText.trim();
+            const goalText = goal_position.innerText.trim();
+
+            // 整理資料
+            function extractXY(text) {
+                const match = text.match(/\((-?\d+),\s*(-?\d+)\)/);
+                return [parseInt(match[1]), parseInt(match[2])];
+            }
+
+            const [lx, ly] = extractXY(localText);
+            const [gx, gy] = extractXY(goalText);
+
+            // 正負好轉換
+            function encode(n) {
+                return (n >= 0 ? "0" : "1") + Math.abs(n);
+            }
+
+            const code =
+                newString +
+                String(car_number) +   // 車號
+                encode(lx) + encode(ly) +
+                encode(gx) + encode(gy);
+
+            const msg = new ROSLIB.Message({ data: code });
+            pub.publish(msg);
+
+            console.log("已發送:", code);
+        }
+
+        /* ========================================= */
         /* III. 功能2繪圖控制 */
         /* ========================================= */
+        const canvas = document.getElementById("drawCanvas");
+        const ctx = canvas.getContext("2d");
+        let drawing = false;
         //滑鼠座標
         document.addEventListener("mousemove", function(event) {
             const img = document.getElementById("cam");
@@ -303,10 +400,33 @@
             document.getElementById("mouse_y").innerText = y.toFixed(0);
         });
 
-        // 尚未實作 sendVelocityControl() 函式，用於送出速度/角速度
-        // function sendVelocityControl() {
-        //     console.log("此功能需要額外 ROS 節點處理速度指令");
-        // }
+        // 當圖片載入後，讓 canvas 和圖片一樣大
+        document.getElementById("cam").onload = () => {
+            canvas.width = cam.width;
+            canvas.height = cam.height;
+        };
+
+        // 滑鼠按下 → 開始畫
+        document.addEventListener("mousedown", () => {
+            drawing = true;
+            ctx.beginPath();
+        });
+
+        // 放開滑鼠 → 停止畫
+        document.addEventListener("mouseup", () => {
+            drawing = false;
+        });
+
+        // 真正負責畫線的函數
+        function drawIfNeeded(x, y, imgHeight) {
+            if (!drawing) return;
+
+            // canvas 的座標系 y 是從上往下，所以要轉換
+            let canvasY = imgHeight - y;
+
+            ctx.lineTo(x, canvasY);
+            ctx.stroke();
+        }
 
         /* ========================================= */
         /* IIII. 特殊功能 */
