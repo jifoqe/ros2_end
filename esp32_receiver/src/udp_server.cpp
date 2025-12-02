@@ -68,11 +68,11 @@ public:
 private:
     void send_numbers()
     {
-        if(function_number){
-            std::string msg = std::to_string(function_number);
+        if(function_number!="0"){
+            std::string msg = function_number;
             sendto(sockfd_, msg.c_str(), msg.size(), 0,
                 (struct sockaddr*)&client_addr_, sizeof(client_addr_));
-            function_number = 0;
+            function_number = "0";
             RCLCPP_INFO(this->get_logger(), "Sent: %s", msg.c_str());
         }
 
@@ -99,7 +99,7 @@ private:
     std::string client_ip_ = "192.168.1.100"; // ESP32 IP，請改成實際 IP
     int client_port_ = 8888;        // ESP32 接收 port
     sockaddr_in client_addr_;
-    int function_number = 0;
+    std::string function_number = "0";
 
     rclcpp::TimerBase::SharedPtr send_timer_;
     rclcpp::TimerBase::SharedPtr recv_timer_;

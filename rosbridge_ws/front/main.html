@@ -1,3 +1,5 @@
+<!-- python3 -m http.server 8000 -->
+<!-- http://localhost:8000/main.html -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -8,6 +10,14 @@
    <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>
 </head>
 <body>
+    <script>
+        fetch("http://localhost:3000/api/data")
+        .then(res => res.json())
+        .then(sql_data => {
+            console.log("收到 Node.js：", sql_data);
+        });
+    </script>
+
     <header>
         <h1>ROS2 遠端控制介面</h1>
     </header>
@@ -34,80 +44,61 @@
                     <p id="mouse_y">0</p>
                 </div>
             </div>
-            <div class="card basic-control-card">
+            <div class="card basic-control-card" id="machines-container">
                 <h2>當前機台狀況</h2>
-                <div>
-                    <p>機台1</p>
-                    <p>電量：</p>
-                    <p>60%</p>
-                    <p>速度：</p>
-                    <p>10m</p>
-                    <p>角速度：</p>
-                    <p>10m</p>
-                    <p>當前位置：</p>
-                    <p>(1,2)</p>
-                    <p>目標位置：</p>
-                    <p>(1,2)</p>
-                    <button>緊急停止</button>
-                </div>
-                <div>
-                    <p>機台2</p>
-                    <p>電量：</p>
-                    <p>60%</p>
-                    <p>速度：</p>
-                    <p>10m</p>
-                    <p>角速度：</p>
-                    <p>10m</p>
-                    <p>當前位置：</p>
-                    <p>(1,2)</p>
-                    <p>目標位置：</p>
-                    <p>(1,2)</p>
-                    <button>緊急停止</button>
-                </div>
-                <div>
-                    <p>機台3</p>
-                    <p>電量：</p>
-                    <p>60%</p>
-                    <p>速度：</p>
-                    <p>10m</p>
-                    <p>角速度：</p>
-                    <p>10m</p>
-                    <p>當前位置：</p>
-                    <p>(1,2)</p>
-                    <p>目標位置：</p>
-                    <p>(1,2)</p>
-                    <button>緊急停止</button>
-                </div>
-                <div>
-                    <p>機台4</p>
-                    <p>電量：</p>
-                    <p>60%</p>
-                    <p>速度：</p>
-                    <p>10m</p>
-                    <p>角速度：</p>
-                    <p>10m</p>
-                    <p>當前位置：</p>
-                    <p>(1,2)</p>
-                    <p>目標位置：</p>
-                    <p>(1,2)</p>
-                    <button>緊急停止</button>
-                </div>
-                <div>
-                    <p>機台5</p>
-                    <p>電量：</p>
-                    <p>60%</p>
-                    <p>速度：</p>
-                    <p>10m</p>
-                    <p>角速度：</p>
-                    <p>10m</p>
-                    <p>當前位置：</p>
-                    <p>(1,2)</p>
-                    <p>目標位置：</p>
-                    <p>(1,2)</p>
-                    <button>緊急停止</button>
-                </div>
+                    <!-- <div>
+                        <p>機台1</p>
+                        <p>電量：</p>
+                        <p>60%</p>
+                        <p>速度：</p>
+                        <p>10m</p>
+                        <p>角速度：</p>
+                        
+                        <p>當前位置：</p>
+                        <p>(1,2)</p>
+                        <p>目標位置：</p>
+                        <p>(1,2)</p>
+                        <button>緊急停止</button>
+                    </div> -->
             </div>
         </section>
+
+<script>
+    function renderMachines(sql_data) {
+        const container = document.getElementById("machines-container");
+        container.innerHTML = ""; // 先清空
+        sql_data.forEach(machine => {
+            const div = document.createElement("div");
+
+            div.innerHTML = `
+                <p>機台 ${machine.car_number}</p>
+                <p>電量：</p>
+                <p>60%</p>
+                <p>速度：</p>
+                <p>${machine.line_speed} m/s</p>
+                <p>角速度：</p>
+                <p>${machine.angle_speed} m/s</p>
+                <p>當前位置：</p>
+                <p>(1,2)</p>
+                <p>目標位置：</p>
+                <p>(1,2)</p>
+                <button onclick="emergencyStop(${machine.car_number})">緊急停止</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function loadMachines() {
+    fetch("http://localhost:3000/api/data")
+        .then(res => res.json())
+        .then(sql_data => renderMachines(sql_data))  // ← 這裡呼叫 renderMachines
+        .catch(err => console.error("fetch error:", err));
+    }
+
+    // 初次載入
+    loadMachines();
+</script>
+        
 
         <section class="control-panel-section">
             
@@ -133,7 +124,7 @@
             <div class="card movement-control-card">
                 <h2>基礎方向控制</h2>
                 <div id="vehicle-select-two">
-                    <input type="checkbox" id="vehicle1_check" name="vehicle_select_group" value="1" checked>
+                    <input type="checkbox" id="vehicle1_check" name="vehicle_select_group" value="1">
                     <label for="vehicle1_check">機台1</label>
                     
                     <input type="checkbox" id="vehicle2_check" name="vehicle_select_group" value="2">
@@ -159,7 +150,7 @@
 
             <div class="card advanced-control-card">
                 <h2>進階運動參數設定</h2>
-                <!-- <form onsubmit="event.preventDefault(); sendVelocityControl();"> -->
+                <form id="velocity-form" onsubmit="event.preventDefault(); sendVelocityControl();">
                     <div class="form-group">
                         <label for="vehicle-select">選擇車輛:</label>
                         <select id="vehicle-select" name="vehicle-select">
@@ -186,11 +177,49 @@
                         <button type="reset" class="action-btn secondary">重設</button>
                         <button type="submit" class="action-btn primary">送出速度指令</button>
                     </div>
-                <!-- </form> -->
+                </form>
             </div>
-
         </section>
     </main>
+
+<script>
+    function sendVelocityControl() {
+        const vehicleSelect = document.getElementById("vehicle-select").value;
+        const linearSpeed = parseFloat(document.getElementById("linear-speed").value);
+        const angularSpeed = parseFloat(document.getElementById("angular-speed").value);
+
+        let targets = [];
+        if(vehicleSelect === "6") {
+            // 全部車輛
+            targets = [1,2,3,4,5];
+        } else {
+            targets = [parseInt(vehicleSelect)];
+        }
+
+        // 逐一更新每台車輛
+        targets.forEach(car_number => {
+            fetch('http://localhost:3000/api/update_machine', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    car_number: Number(car_number),
+                    line_speed: linearSpeed,
+                    angle_speed: angularSpeed
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(`車輛${car_number} 更新結果:`, vehicleSelect);
+                console.log(`車輛${car_number} 更新結果:`, linearSpeed);
+                console.log(`車輛${car_number} 更新結果:`, angularSpeed);
+                console.log(`車輛${car_number} 更新結果:`, data);
+            })
+            .catch(err => console.error('更新錯誤:', err));
+        });
+
+        alert("已送出速度指令到選擇的車輛！");
+    }
+</script>
 
     <script>
         /* ========================================= */
@@ -206,40 +235,21 @@
 
         // 建立 publisher
         const pub = new ROSLIB.Topic({
-        ros: ros,
-        name: '/web_input',
-        messageType: 'std_msgs/String'
+            ros: ros,
+            name: '/web_input',
+            messageType: 'std_msgs/String'
         });
 
         /* ========================================= */
         /* II. 功能1基本控制 */
         /* ========================================= */
         // 發送訊息 (用於快速測試和基礎方向控制)
-        function sendMsg(data) {
-            const msg = new ROSLIB.Message({ data: String(data) });
-            pub.publish(msg);
-            console.log("已發送:", data);
-        }
 
         let car_number = []; // 存放選中的車輛
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkboxes = document.querySelectorAll("#vehicle-select-two input[type='checkbox']");
-
-            checkboxes.forEach((cb) => {
-                cb.addEventListener("change", () => {
-                    // 收集所有被勾選的值
-                    car_number = Array.from(checkboxes)
-                                    .filter(c => c.checked)
-                                    .map(c => c.value);
-                    console.log("目前選擇車輛:", car_number);
-                });
-            });
-        });
-
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const checkboxes = document.querySelectorAll("#vehicle-select-two input[type='checkbox']");
+            console.log("good:", car_number);
 
             checkboxes.forEach((cb) => {
                 cb.addEventListener("change", () => {
@@ -257,6 +267,7 @@
             newString += String(data);
             for (let i = 0; i < car_number.length; i++) {
                 newString += car_number[i];  // 將每個車輛號碼接上
+                console.log("good:", newString);
             }
             
             const msg = new ROSLIB.Message({ data: newString });
@@ -269,16 +280,43 @@
         /* ========================================= */
         //滑鼠座標
         document.addEventListener("mousemove", function(event) {
+            const img = document.getElementById("cam");
+            const rect = img.getBoundingClientRect();
+
+            const inside =
+                event.clientX >= rect.left &&
+                event.clientX <= rect.right &&
+                event.clientY >= rect.top &&
+                event.clientY <= rect.bottom;
+
+            if (!inside) return;
+
+            // 計算相對於圖片左上角的座標
+            let x = event.clientX - rect.left;
+            let y_from_top = event.clientY - rect.top;
+
+            // 把坐標轉換成「左下角為 0,0」
+            let y = rect.height - y_from_top;
+
             // event.clientX, event.clientY = 滑鼠在視窗的座標
-            document.getElementById("mouse_x").innerText = event.clientX;
-            document.getElementById("mouse_y").innerText = event.clientY;
+            document.getElementById("mouse_x").innerText = x.toFixed(0);
+            document.getElementById("mouse_y").innerText = y.toFixed(0);
         });
 
         // 尚未實作 sendVelocityControl() 函式，用於送出速度/角速度
-        function sendVelocityControl() {
-            console.log("此功能需要額外 ROS 節點處理速度指令");
-            // 這裡將是您未來撰寫 JS 邏輯的地方
+        // function sendVelocityControl() {
+        //     console.log("此功能需要額外 ROS 節點處理速度指令");
+        // }
+
+        /* ========================================= */
+        /* IIII. 特殊功能 */
+        /* ========================================= */
+        function sendMsg(data) {
+            const msg = new ROSLIB.Message({ data: String(data) });
+            pub.publish(msg);
+            console.log("已發送:", data);
         }
+
     </script>
 </body>
 </html>
