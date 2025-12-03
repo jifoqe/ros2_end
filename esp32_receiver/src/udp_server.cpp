@@ -29,9 +29,8 @@ public:
         subscription_ = this->create_subscription<std_msgs::msg::String>(
             "/web_ros_date", 10,
             [this](std_msgs::msg::String::SharedPtr msg) {
-                std::string s = msg->data;   // string
-                RCLCPP_INFO(this->get_logger(), "收到: '%s'", s.c_str());
-                web_date = std::stoi(s);
+                web_date = msg->data;   // string
+                RCLCPP_INFO(this->get_logger(), "收到: '%s'", web_date.c_str());
             }
         );
 
@@ -120,7 +119,6 @@ private:
     rclcpp::TimerBase::SharedPtr send_timer_;
     rclcpp::TimerBase::SharedPtr recv_timer_;
     rclcpp::TimerBase::SharedPtr timer_;
-
 
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;

@@ -82,7 +82,7 @@
                 <p>角速度：</p>
                 <p>${machine.angle_speed} m/s</p>
                 <p>當前位置：</p>
-                <p id="${localId}">(1,2)</p>
+                <p id="${localId}">(11,-02)</p>
                 <p>目標位置：</p>
                 <p id="${targetId}" onclick="editTarget('${targetId}')"> 設定目標 </p>
                 <p>距離：</p>
@@ -228,12 +228,11 @@
         alert("已送出速度指令到選擇的車輛！");
     }
 </script>
-
     <script>
         /* ========================================= */
         /* 全域參數*/
         /* ========================================= */
-        let newString = "0";
+        let newString = "";
 
         /* ========================================= */
         /* 功能選擇 */
@@ -323,6 +322,7 @@
             const msg = new ROSLIB.Message({ data: newString });
             pub.publish(msg);
             console.log("已發送:", newString);
+            newString = "1";
         }
 
         /* ========================================= */
@@ -373,7 +373,12 @@
 
             // 正負好轉換
             function encode(n) {
-                return (n >= 0 ? "0" : "1") + Math.abs(n);
+                const sign = n >= 0 ? "0" : "1";     // 正 = 0, 負 = 1
+                let absNum = Math.abs(n);           // 絕對值
+                // 轉成兩位數，不足補 0
+                absNum = absNum.toString().padStart(2, '0');
+
+                return sign + absNum;               // e.g. "0" + "01" → "001"
             }
 
             const code =
@@ -393,11 +398,27 @@
         /* ========================================= */
         const canvas = document.getElementById("drawCanvas");
         const ctx = canvas.getContext("2d");
+        const img = document.getElementById("cam");
+
         let drawing = false;
-        //滑鼠座標
-        document.addEventListener("mousemove", function(event) {
-            const img = document.getElementById("cam");
+        let drawPoints = [];
+
+        // 讓 canvas 完美重疊影像
+        function syncCanvas() {
             const rect = img.getBoundingClientRect();
+            canvas.style.left = rect.left + "px";
+            canvas.style.top = rect.top + "px";
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        img.onload = syncCanvas;
+        window.onresize = syncCanvas;
+
+        // 記錄滑鼠位置
+        document.addEventListener("mousemove", (event) => {
+            
+            const rect = canvas.getBoundingClientRect();
 
             const inside =
                 event.clientX >= rect.left &&
@@ -407,44 +428,94 @@
 
             if (!inside) return;
 
-            // 計算相對於圖片左上角的座標
             let x = event.clientX - rect.left;
-            let y_from_top = event.clientY - rect.top;
+            let y = event.clientY - rect.top;
 
-            // 把坐標轉換成「左下角為 0,0」
-            let y = rect.height - y_from_top;
+            // 你要「左下角為 0,0」 → 自己轉換
+            let y_from_bottom = rect.height - y;
 
-            // event.clientX, event.clientY = 滑鼠在視窗的座標
-            document.getElementById("mouse_x").innerText = x.toFixed(0);
-            document.getElementById("mouse_y").innerText = y.toFixed(0);
+            // 顯示座標
+            document.getElementById("mouse_x").innerTesend_directionxt = x.toFixed(0);
+            document.getElementById("mouse_y").innerText = y_from_bottom.toFixed(0);
+
+            drawIfNeeded(x, y);
         });
 
-        // 當圖片載入後，讓 canvas 和圖片一樣大
-        document.getElementById("cam").onload = () => {
-            canvas.width = cam.width;
-            canvas.height = cam.height;
-        };
-
         // 滑鼠按下 → 開始畫
-        document.addEventListener("mousedown", () => {
+        document.addEventListener("mousedown", (event) => {
+            const rect = canvas.getBoundingClientRect();
+
+            const inside =
+                event.clientX >= rect.left &&
+                event.clientX <= rect.right &&
+                event.clientY >= rect.top &&
+                event.clientY <= rect.bottom;
+
+            if (!inside) return;
+
+            if (newString != "3") {
+                alert("只有功能三才能使用");
+                return;
+            }
+
+            if (car_number == "") {
+                alert("選擇車輛");
+                return;
+            }
+
+            drawPoints.push("3")
+            for (let i = 0; i < car_number.length; i++) {
+                newString += car_number[i];
+            }
+            drawPoints.push(newString)
             drawing = true;
+
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+
             ctx.beginPath();
+            ctx.moveTo(x, y);
         });
 
         // 放開滑鼠 → 停止畫
         document.addEventListener("mouseup", () => {
             drawing = false;
+
+            if (drawPoints.length > 0) {
+                sendDrawDataToROS(drawPoints);
+            }
         });
 
-        // 真正負責畫線的函數
-        function drawIfNeeded(x, y, imgHeight) {
-            if (!drawing) return;
+        // 連續畫線
+        function drawIfNeeded(x, y) {
+            if (!drawing) {
+                return;
+            }
+            //離散化
+            const ix = Math.round(x / 25) * 25;
+            const iy = Math.round(y / 25) * 25;
+            console.log("x:",ix ,"y:",iy)
+            drawPoints.push(pad3(ix), pad3(iy));
 
-            // canvas 的座標系 y 是從上往下，所以要轉換
-            let canvasY = imgHeight - y;
-
-            ctx.lineTo(x, canvasY);
+            ctx.lineTo(ix, iy);
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
             ctx.stroke();
+        }
+
+        function pad3(n) {
+            return String(n).padStart(3, '0');
+        }
+
+        function sendDrawDataToROS(points) {
+            const msg = new ROSLIB.Message({
+                data: JSON.stringify(points)
+            });
+
+            pub.publish(msg);
+            console.log("已傳給 ROS:", points);
+            drawPoints = [];  // 清空紀錄
+            newString = "3";
         }
 
         /* ========================================= */
@@ -455,7 +526,6 @@
             pub.publish(msg);
             console.log("已發送:", data);
         }
-
     </script>
 </body>
 </html>

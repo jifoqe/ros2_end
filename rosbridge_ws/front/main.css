@@ -106,7 +106,7 @@ header h1 {
 #cam {
     display: block;
     width: 100%;
-    max-height: 500px; /* 限制高度，避免機台狀態區塊被擠壓 */
+    /* max-height: 500px; */
     object-fit: contain; 
 }
 
