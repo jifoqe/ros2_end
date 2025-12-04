@@ -63,6 +63,37 @@ private:
             return esp32_date;
         }
 
+        if (func == '3') {
+            int car     = web_data[1] - '0';
+            int local_x = (web_data[2] - '0') * 100 + (web_data[3] - '0') * 10 + (web_data[4] - '0');
+            int local_y = (web_data[5] - '0') * 100 + (web_data[6] - '0') * 10 + (web_data[7] - '0');
+            int goal_x = (web_data[8] - '0') * 100 + (web_data[9] - '0') * 10 + (web_data[10] - '0');
+            int goal_y = (web_data[11] - '0') * 100 + (web_data[12] - '0') * 10 + (web_data[13] - '0');
+
+            RCLCPP_INFO(
+                this->get_logger(),
+                "解析結果: 功能=%d car=%d local(%d,%d) goal(%d,%d)",
+                func - '0', car, local_x, local_y, goal_x, goal_y
+            );
+            std::string esp32_date = "";
+            esp32_date.push_back(web_data[0]);  // 功能
+            esp32_date.push_back(web_data[1]);  // 車號
+            esp32_date.push_back(move(local_x, local_y, goal_x, goal_y));       // 動作碼
+
+            // 回傳格式可依你需求調整
+            return esp32_date;
+        }
+
+        if (func == '5') {
+            std::string esp32_date = "";
+            esp32_date.push_back(web_data[0]);  // 功能
+            esp32_date.push_back(web_data[1]);  // 車號
+            esp32_date.push_back('5');       // 動作碼
+
+            // 回傳格式可依你需求調整
+            return esp32_date;
+        }
+
         return "UNKNOWN_FUNC";
     }
 

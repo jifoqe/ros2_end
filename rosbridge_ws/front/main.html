@@ -29,13 +29,13 @@
                 <div class="video-controls">
                     <label for="image_change">影像來源:</label>
                     <select id="image_change">
-                        <option value="前">原圖 (raw)</option>
-                        <option value="後">影像處理圖 (processed)</option>
-                        <option value="左">控制模式 (control mode)</option>
+                        <option value="raw">原圖 (raw)</option>
+                        <option value="processed">影像處理圖 (processed)</option>
                     </select>
                 </div>
                 <div class="image-display-wrapper">
                     <img id="cam" src="http://10.50.65.22:8080/stream?topic=/camera_image" alt="即時影像串流">
+                    <img id="cam_processed" src="http://10.50.65.22:8080/stream?topic=/camera_image_fix" alt="即時影像串流" style="display:none;">
                     <canvas id="drawCanvas" style="position: absolute; left: 0; top: 0;"></canvas>
                 </div>
                 <div class="x_y_position">
@@ -114,8 +114,8 @@
                 <h2>快速測試通訊</h2>
                 <div class="button-group">
                     <button class="action-btn primary" onclick="sendMsg(1)">1</button>
-                    <!-- <button class="action-btn primary" onclick="sendMsg(2)">2</button>
-                    <button class="action-btn primary" onclick="sendMsg(3)">3</button> -->
+                    <button class="action-btn primary" onclick="sendMsg(2)">2</button>
+                    <button class="action-btn primary" onclick="sendMsg(3)">3</button>
                 </div>
             </div>
 
@@ -393,6 +393,17 @@
             console.log("已發送:", code);
         }
 
+        //暫停功能
+        function emergencyStop(car_number){
+            newString = "5"
+            newString += String(car_number);
+            
+            const msg = new ROSLIB.Message({ data: newString });
+            pub.publish(msg);
+            console.log("已發送:", newString);
+            newString = "1";
+        }
+
         /* ========================================= */
         /* III. 功能2繪圖控制 */
         /* ========================================= */
@@ -401,7 +412,7 @@
         const img = document.getElementById("cam");
 
         let drawing = false;
-        let drawPoints = [];
+        let drawPoints = "";
 
         // 讓 canvas 完美重疊影像
         function syncCanvas() {
@@ -435,7 +446,7 @@
             let y_from_bottom = rect.height - y;
 
             // 顯示座標
-            document.getElementById("mouse_x").innerTesend_directionxt = x.toFixed(0);
+            document.getElementById("mouse_x").innerText = x.toFixed(0);
             document.getElementById("mouse_y").innerText = y_from_bottom.toFixed(0);
 
             drawIfNeeded(x, y);
@@ -463,11 +474,10 @@
                 return;
             }
 
-            drawPoints.push("3")
             for (let i = 0; i < car_number.length; i++) {
                 newString += car_number[i];
             }
-            drawPoints.push(newString)
+            drawPoints += newString
             drawing = true;
 
             let x = event.clientX - rect.left;
@@ -487,17 +497,32 @@
         });
 
         // 連續畫線
+        let last_ix = null;
+        let last_iy = null;
         function drawIfNeeded(x, y) {
             if (!drawing) {
                 return;
             }
+            const rect = canvas.getBoundingClientRect();
             //離散化
-            const ix = Math.round(x / 25) * 25;
-            const iy = Math.round(y / 25) * 25;
-            console.log("x:",ix ,"y:",iy)
-            drawPoints.push(pad3(ix), pad3(iy));
+            const raw_ix = Math.round(x / 25) * 25;
+            const raw_iy = Math.round(y / 25) * 25;
+            // 轉換成「左下角為 0,0」
+            let ix = raw_ix;
+            let iy = rect.height - raw_iy;
+            ix = Math.round(ix / 25) * 25;
+            iy = Math.round(iy / 25) * 25;
 
-            ctx.lineTo(ix, iy);
+            if (ix === last_ix && iy === last_iy) {
+                return;  // 不重複送出
+            }
+            last_ix = ix;
+            last_iy = iy;
+            
+            console.log("x:",ix ,"y:",iy)
+            drawPoints += pad3(ix) + pad3(iy);
+
+            ctx.lineTo(raw_ix, raw_iy);
             ctx.strokeStyle = "red";
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -509,14 +534,36 @@
 
         function sendDrawDataToROS(points) {
             const msg = new ROSLIB.Message({
-                data: JSON.stringify(points)
+                data: points
             });
 
             pub.publish(msg);
             console.log("已傳給 ROS:", points);
-            drawPoints = [];  // 清空紀錄
+            drawPoints = "";  // 清空紀錄
             newString = "3";
         }
+
+        /* ========================================= */
+        /* 照片選擇 */
+        /* ========================================= */
+        document.getElementById("image_change").addEventListener("change", function() {
+            const value = this.value;
+            const raw = document.getElementById("cam");
+            const processed = document.getElementById("cam_processed");
+            console.log("選擇成功")
+
+            // 全部先隱藏
+            raw.style.display = "none";
+            processed.style.display = "none";
+
+            // 再顯示選到的
+            if (value === "raw") {
+                raw.style.display = "block";
+            } 
+            else if (value === "processed") {
+                processed.style.display = "block";
+            }
+        });
 
         /* ========================================= */
         /* IIII. 特殊功能 */

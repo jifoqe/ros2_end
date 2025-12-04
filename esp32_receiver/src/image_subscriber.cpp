@@ -17,6 +17,7 @@ public:
 
     // 發佈相機影像
     publisher_ = this->create_publisher<sensor_msgs::msg::Image>("/camera_image", 10);
+    gray_publisher_ = this->create_publisher<sensor_msgs::msg::Image>("/camera_image_fix", 10);
   }
 
 private:
@@ -28,11 +29,20 @@ private:
 
       // 顯示影像 (僅用於 debug)
       cv::imshow("Camera", frame);
-      cv::waitKey(1);
+      // cv::waitKey(1);
 
       // 再發佈原影像
       auto out_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
       publisher_->publish(*out_msg);
+
+      // ---- 影像處理：轉灰階 ----
+      cv::Mat gray;
+      cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+      cv::imshow("Gray Image", gray);
+      // cv::waitKey(1);
+
+      auto gray_msg = cv_bridge::CvImage(msg->header, "mono8", gray).toImageMsg();
+      gray_publisher_->publish(*gray_msg);
     }
     catch (cv_bridge::Exception &e) {
       RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
@@ -41,6 +51,7 @@ private:
 
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr gray_publisher_;
 };
 
 int main(int argc, char **argv)
