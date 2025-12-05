@@ -44,6 +44,12 @@
                     <p>y:</p>
                     <p id="mouse_y">0</p>
                 </div>
+                <div class="x_y_position">
+                    <p>x:</p>
+                    <p id="mouse_camera_x">0</p>
+                    <p>y:</p>
+                    <p id="mouse_camera_y">0</p>
+                </div>
             </div>
             <div class="card basic-control-card" id="machines-container">
                 <h2>當前機台狀況</h2>
@@ -85,7 +91,7 @@
                 <p id="${localId}">(11,-02)</p>
                 <p>目標位置：</p>
                 <p id="${targetId}" onclick="editTarget('${targetId}')"> 設定目標 </p>
-                <p>距離：</p>
+                <p>狀態：</p>
                 <p> 無資料 </p>
                 <div class="machine-actions-group">
                     <button class="action-btn primary" onclick="startMoving(${machine.car_number}, '${localId}', '${targetId}')">出發</button>
@@ -273,6 +279,12 @@
             messageType: 'std_msgs/String'
         });
 
+        const camera_position_data = new ROSLIB.Topic({
+            ros: ros,
+            name: '/web_position_data',        // ⭐你要接收的 Topic
+            messageType: 'std_msgs/String'
+        });
+
         // 訂閱並接收資料
         sub.subscribe((msg) => {
             console.log("收到來自 ROS 的訊息:", msg.data);
@@ -281,6 +293,24 @@
             const outputDiv = document.getElementById("ros-output");
             if (outputDiv) {
                 outputDiv.innerText = msg.data;
+            }
+        });
+
+        camera_position_data.subscribe((msg) => {
+            console.log("收到來自 ROS 的訊息:", msg.data);
+
+            const parts = msg.data.split(",");  // ["5", "0.123", "-0.456", "87.0"]
+
+            const car_id = Number(parts[0]);
+            const car_position_x = Number(parts[1]);
+            const car_position_y = Number(parts[2]);
+            const car_yaw = Number(parts[3]);
+
+            // 你要在畫面更新也可以，例如：
+            const outputDiv = document.getElementById(`local-pos-${car_id}`);
+            if (outputDiv) {
+                outputDiv.innerText =
+                    `(${car_position_x},${car_position_y},${car_yaw})`;
             }
         });
 
@@ -442,12 +472,21 @@
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
 
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
             // 你要「左下角為 0,0」 → 自己轉換
             let y_from_bottom = rect.height - y;
 
+            // x：右正左負
+            let ix = x - centerX;
+
+            // y：上正下負
+            let iy = y_from_bottom - centerY;
+
             // 顯示座標
-            document.getElementById("mouse_x").innerText = x.toFixed(0);
-            document.getElementById("mouse_y").innerText = y_from_bottom.toFixed(0);
+            document.getElementById("mouse_x").innerText = ix.toFixed(0);
+            document.getElementById("mouse_y").innerText = iy.toFixed(0);
 
             drawIfNeeded(x, y);
         });
@@ -507,9 +546,17 @@
             //離散化
             const raw_ix = Math.round(x / 25) * 25;
             const raw_iy = Math.round(y / 25) * 25;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            // x：右正左負
+            let ix = raw_ix - centerX;
+
+            // y：上正下負
+            let iy = centerY - raw_iy;
             // 轉換成「左下角為 0,0」
-            let ix = raw_ix;
-            let iy = rect.height - raw_iy;
+            // let ix = raw_ix;
+            // let iy = rect.height - raw_iy;
             ix = Math.round(ix / 25) * 25;
             iy = Math.round(iy / 25) * 25;
 
@@ -523,6 +570,7 @@
             drawPoints += pad3(ix) + pad3(iy);
 
             ctx.lineTo(raw_ix, raw_iy);
+            // ctx.lineTo(x, y);
             ctx.strokeStyle = "red";
             ctx.lineWidth = 2;
             ctx.stroke();
