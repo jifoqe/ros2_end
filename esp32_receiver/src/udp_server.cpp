@@ -18,7 +18,9 @@ public:
             std::chrono::seconds(1),
             [this]() {
                 std_msgs::msg::String msg;
-                msg.data = "Hello from C++ node!";
+                msg.data = "1"; //完成
+                // msg.data = "2"; //執行中
+                // msg.data = "3"; //狀況
                 publisher_->publish(msg);
                 RCLCPP_INFO(this->get_logger(), "已傳送給 web: %s", msg.data.c_str());
             }

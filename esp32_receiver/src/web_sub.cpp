@@ -21,7 +21,7 @@ public:
                 out_msg.data = processed;
 
                 publisher_->publish(out_msg);
-                RCLCPP_INFO(this->get_logger(), "已回傳: %s", processed.c_str());
+                // RCLCPP_INFO(this->get_logger(), "已回傳: %s", processed.c_str());
             }
         );
     }
@@ -65,10 +65,22 @@ private:
 
         if (func == '3') {
             int car     = web_data[1] - '0';
-            int local_x = (web_data[2] - '0') * 100 + (web_data[3] - '0') * 10 + (web_data[4] - '0');
-            int local_y = (web_data[5] - '0') * 100 + (web_data[6] - '0') * 10 + (web_data[7] - '0');
-            int goal_x = (web_data[8] - '0') * 100 + (web_data[9] - '0') * 10 + (web_data[10] - '0');
-            int goal_y = (web_data[11] - '0') * 100 + (web_data[12] - '0') * 10 + (web_data[13] - '0');
+            int local_x = (web_data[3] - '0') * 100 + (web_data[4] - '0') * 10 + (web_data[5] - '0');
+            if(web_data[2] - '0' != 0){
+                local_x *= -1;
+            }
+            int local_y = (web_data[7] - '0') * 100 + (web_data[8] - '0') * 10 + (web_data[9] - '0');
+            if(web_data[6] - '0' != 0){
+                local_y *= -1;
+            }
+            int goal_x = (web_data[11] - '0') * 100 + (web_data[12] - '0') * 10 + (web_data[13] - '0');
+            if(web_data[10] - '0' != 0){
+                goal_x *= -1;
+            }
+            int goal_y = (web_data[15] - '0') * 100 + (web_data[16] - '0') * 10 + (web_data[17] - '0');
+            if(web_data[14] - '0' != 0){
+                goal_y *= -1;
+            }
 
             RCLCPP_INFO(
                 this->get_logger(),
@@ -79,6 +91,42 @@ private:
             esp32_date.push_back(web_data[0]);  // 功能
             esp32_date.push_back(web_data[1]);  // 車號
             esp32_date.push_back(move(local_x, local_y, goal_x, goal_y));       // 動作碼
+
+            // 回傳格式可依你需求調整
+            return esp32_date;
+        }
+
+        if (func == '4') {
+            std::array<int, 5> car{};
+            std::array<int, 5> local_x{};
+            std::array<int, 5> local_y{};
+            std::array<int, 5> goal_x{};
+            std::array<int, 5> goal_y{};
+
+            for (int i = 0; i < 5; i++) {
+                int car_pair = i * 17 + 1;  // 每台車的起始位置
+
+                car[i]      = web_data[car_pair] - '0';
+                local_x[i]  = total_car_number(web_data, car_pair + 1); // local x 從 car_pair+1 開始
+                local_y[i]  = total_car_number(web_data, car_pair + 5); // local y 從 car_pair+5 開始
+                goal_x[i]   = total_car_number(web_data, car_pair + 9); // goal x
+                goal_y[i]   = total_car_number(web_data, car_pair + 13); // goal y
+            }
+
+            for (int i = 0; i < 5; i++) {
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Car%d: local(%d,%d) goal(%d,%d)",
+                    car[i], local_x[i], local_y[i], goal_x[i], goal_y[i]
+                );
+            }
+            // std::string esp32_date = "";
+            std::string esp32_date= "";
+            esp32_date.push_back(web_data[0]);  // 功能
+            esp32_date.push_back(web_data[1]);  // 車號
+            for (int i = 0; i < 5; i++) {
+                esp32_date += move(local_x[i], local_y[i], goal_x[i], goal_y[i]);
+            }
 
             // 回傳格式可依你需求調整
             return esp32_date;
@@ -96,6 +144,20 @@ private:
 
         return "UNKNOWN_FUNC";
     }
+
+    //功能4
+    int total_car_number(const std::string &web_data, int start) {
+        int number = (web_data[start + 1] - '0') * 100 +
+                    (web_data[start + 2] - '0') * 10 +
+                    (web_data[start + 3] - '0');
+
+        if (web_data[start] - '0' != 0) {
+            number *= -1;  // 符號位
+        }
+
+        return number;
+    }
+
 
     //功能2
     char move(int local_x, int local_y, int goal_x, int goal_y){
