@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入頁面</title>
+    <link rel="stylesheet" href="Login.css"> <!-- 連結 CSS 檔案 -->
+</head>
+<body>
+    <div class="login-container">
+        <h2>使用者登入</h2>
+        <form action="/login" method="POST"> 
+            <!-- 表單開始，action="/login" 為提交目標 -->
+            <div class="input-group">
+                <label for="username">帳號：</label>
+                <input type="text" id="username" name="username" placeholder="請輸入您的帳號" required>
+            </div>
+            <div class="input-group">
+                <label for="password">密碼：</label>
+                <input type="password" id="password" name="password" placeholder="請輸入您的密碼" required>
+            </div>
+            <button type="submit">登入</button> <!-- 提交按鈕 -->
+            <div class="options">
+                <a href="#">忘記密碼?</a> | <a href="#">註冊</a> <!-- 連結 -->
+            </div>
+        </form>
+    </div>
+</body>
+</html>
