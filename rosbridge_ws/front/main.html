@@ -20,6 +20,7 @@
 
     <header>
         <h1>ROS2 遠端控制介面</h1>
+        <button id="logoutBtn">登出</button>
     </header>
 
     <main class="container">
@@ -34,8 +35,11 @@
                     </select>
                 </div>
                 <div class="image-display-wrapper">
-                    <img id="cam" src="http://10.50.65.122:8080/stream?topic=/camera_image" alt="即時影像串流">
-                    <img id="cam_processed" src="http://10.50.65.122:8080/stream?topic=/camera_image_fix" alt="即時影像串流" style="display:none;">
+                    <!-- <img id="cam" src="http://10.50.65.122:8080/stream?topic=/camera_image" alt="即時影像串流">
+                    <img id="cam_processed" src="http://10.50.65.122:8080/stream?topic=/camera_image_fix" alt="即時影像串流" style="display:none;"> -->
+                    
+                    <img id="cam" alt="即時影像串流">
+                    <img id="cam_processed" alt="即時影像串流" style="display:none;">
                     <canvas id="drawCanvas" style="position: absolute; left: 0; top: 0;"></canvas>
                 </div>
                 <div class="x_y_position">
@@ -260,8 +264,17 @@
         /* ========================================= */
         /* ROS的連接 */
         /* ========================================= */
+        const params = new URLSearchParams(window.location.search);
+        const ros_ip = params.get('ros_ip');
+        console.log('ROS IP:', ros_ip);
+        const raw = document.getElementById("cam");
+        const processed = document.getElementById("cam_processed");
+        cam.src = `http://${ros_ip}:8080/stream?topic=/camera_image`;
+        cam_processed.src = `http://${ros_ip}:8080/stream?topic=/camera_image_fix`;
+        
         const ros = new ROSLIB.Ros({
-            url: "ws://10.50.65.122:9090"
+            // url: "ws://10.50.65.122:9090"
+            url: "ws://" + ros_ip + ":9090"
         });
 
         ros.on('connection', () => { console.log('已連接到 rosbridge'); });
@@ -622,8 +635,6 @@
         /* ========================================= */
         document.getElementById("image_change").addEventListener("change", function() {
             const value = this.value;
-            const raw = document.getElementById("cam");
-            const processed = document.getElementById("cam_processed");
             console.log("選擇成功")
 
             // 全部先隱藏
@@ -685,6 +696,17 @@
         /* ========================================= */
         /* IV 特殊功能 */
         /* ========================================= */
+
+        /* ========================================= */
+        /* IV 登出 */
+        /* ========================================= */
+        const logoutBtn = document.getElementById("logoutBtn");
+        logoutBtn.addEventListener("click", function() {
+            localStorage.removeItem("ros_ip");
+
+            window.location.href = "http://localhost:8000/Login.html";
+        });
+
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 02, 2025 at 10:43 AM
+-- Generation Time: Dec 10, 2025 at 03:31 PM
 -- Server version: 8.0.44-0ubuntu0.22.04.1
 -- PHP Version: 8.1.2-1ubuntu2.22
 
@@ -44,6 +44,25 @@ INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`
 (3, 0.5, 0, '2025-12-01 22:52:37'),
 (4, 2, 1, '2025-12-01 22:06:16'),
 (5, 6, 6, '2025-12-01 22:38:30');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_base`
+--
+
+CREATE TABLE `user_base` (
+  `username` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '使用者',
+  `password` char(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '密碼',
+  `permissions` enum('1','2','3','4','5','6','7','8','9') NOT NULL COMMENT '權限'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='使用者基本資料使用者';
+
+--
+-- Dumping data for table `user_base`
+--
+
+INSERT INTO `user_base` (`username`, `password`, `permissions`) VALUES
+('u', '0', '9');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

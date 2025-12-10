@@ -1,5 +1,6 @@
 // http://localhost:3000/api/data
 // http://localhost:3000/api/update_machine
+// http://localhost:3000/api/login
 // http://localhost/phpmyadmin/index.php?route=/&route=%2F
 // 建立 MySQL 連線
 const mysql = require('mysql2');
@@ -22,6 +23,8 @@ connection.connect(err => {
   if (err) throw err;
   console.log('已連接 MySQL');
 });
+
+
 
 // 連接前端初始化生成
 app.get("/api/data", (req, res) => {
@@ -51,6 +54,43 @@ app.post('/api/update_machine', (req, res) => {
         res.json({ success: true, message: '更新成功', result });
         console.log('更新資料:', { car_number, line_speed, angle_speed, now });
     });
+});
+
+// 登入帳號密碼
+let USERS = [];
+function loadUsers() {
+  const sql = "SELECT username, password FROM user_base";
+  
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("查詢失敗:", err);
+      return;
+    }
+
+    USERS = results.map(row => ({
+      username: row.username,
+      password: row.password
+    }));
+
+    console.log(`資料：${USERS}`)
+  });
+};
+loadUsers();
+
+app.post('/api/login', (req, res) => {
+    const { username, password ,ros_ip} = req.body;
+
+    if(req.method !== 'POST'){
+      return res.status(405).send('method not allowed');
+    }
+
+    const user = USERS.find(u => u.username === username && u.password === password);
+
+    if(user){
+      res.send({success:true, message:'登入成功', ros_ip:ros_ip})
+    }else{
+      res.send({ success: false, message: '帳號或密碼錯誤' });
+    }
 });
 
 app.listen(port, () => {

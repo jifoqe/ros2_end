@@ -1,30 +1,68 @@
-<!-- http://localhost:8000/main.html -->
+<!-- http://localhost:8000/Login.html -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登入頁面</title>
-    <link rel="stylesheet" href="Login.css"> <!-- 連結 CSS 檔案 -->
+    <link rel="stylesheet" href="Login.css">
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>
 </head>
 <body>
     <div class="login-container">
         <h2>使用者登入</h2>
-        <form action="/login" method="POST"> 
-            <!-- 表單開始，action="/login" 為提交目標 -->
+        <form action="http://localhost:3000/api/login" method="POST" id="loginForm">
+             <div class="input-group">
+                <label for="username">ROS連接：</label>
+                <input type="text" id="ros_ip" name="username" placeholder="10.50.65.122" required>
+            </div>
+
             <div class="input-group">
                 <label for="username">帳號：</label>
                 <input type="text" id="username" name="username" placeholder="請輸入您的帳號" required>
             </div>
+
             <div class="input-group">
                 <label for="password">密碼：</label>
                 <input type="password" id="password" name="password" placeholder="請輸入您的密碼" required>
             </div>
-            <button type="submit">登入</button> <!-- 提交按鈕 -->
-            <div class="options">
-                <a href="#">忘記密碼?</a> | <a href="#">註冊</a> <!-- 連結 -->
-            </div>
+
+            <button type="submit">登入</button>
+            <!-- <div class="options">
+                <a href="#">忘記密碼?</a> | <a href="#">註冊</a>
+            </div> -->
         </form>
     </div>
+    <script>
+        const form = document.getElementById('loginForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // 阻止表單預設刷新行為
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const ros_ip = document.getElementById('ros_ip').value;
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, ros_ip })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    alert('登入成功！');
+                    // window.location.href = 'http://localhost:8000/main.html';
+                    window.location.href = `http://localhost:8000/main.html?ros_ip=${encodeURIComponent(result.ros_ip)}`;
+                } else {
+                    alert(result.message);
+                }
+            } catch (err) {
+                console.error('登入錯誤：', err);
+                alert('無法連線到後端');
+            }
+        });
+    </script>
+
 </body>
 </html>
