@@ -48,11 +48,16 @@
                     <p>y:</p>
                     <p id="mouse_y">0</p>
                 </div>
+                <!-- 測試中12/11 劉丞翔 -->
                 <div class="x_y_position">
                     <p>x:</p>
                     <p id="mouse_camera_x">0</p>
                     <p>y:</p>
                     <p id="mouse_camera_y">0</p>
+                </div>
+                <div>
+                    <button onclick="draw_round()">抓車子</button>
+                    <button onclick="drow_clear()">清除</button>
                 </div>
                 <!-- 開發專用 -->
                 <div>
@@ -318,23 +323,29 @@
                 sendDrawDataToROS(drawPoints);
             }
         });
-
+        let carData = {};
         camera_position_data.subscribe((msg) => {
-            const parts = msg.data.split(",");  // ["5", "0.123", "-0.456", "87.0"]
+            const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
-            const car_id = Number(parts[0]);
-            const car_position_x = Number(parts[1])*100;
-            const car_position_y = Number(parts[2])*100;
-            const car_yaw = Number(parts[3]);
+            let car_id = Number(parts[0]);
+            let x = Number(parts[1]);
+            let y = Number(parts[2]);
+            let yaw = Number(parts[3]);
+            let img_car_x = Number(parts[4]);
+            let img_car_y = Number(parts[5]);
 
-            // 你要在畫面更新也可以，例如：
-            const outputDiv = document.getElementById(`local-pos-${car_id}`);
-            if (outputDiv && car_id<6) {
-                console.log("收到來自 ROS 的訊息:", msg.data);
-                outputDiv.innerText =
-                `${car_position_x.toFixed(1)}, ${car_position_y.toFixed(1)}, ${car_yaw.toFixed(1)}`;
+            // 更新 carData
+            carData[car_id] = { x, y, yaw, img_car_x, img_car_y };
+
+            // 如果是 ID>0，更新畫面 div
+            if (car_id > 0 && car_id < 6) {
+                const outputDiv = document.getElementById(`local-pos-${car_id}`);
+                if (outputDiv) {
+                    outputDiv.innerText = `${x.toFixed(1)}, ${y.toFixed(1)}, ${yaw.toFixed(1)}`;
+                }
             }
         });
+
 
 
         /* ========================================= */
@@ -459,15 +470,15 @@
         /* ========================================= */
         /* III. 功能2繪圖控制 */
         /* ========================================= */
-        const canvas = document.getElementById("drawCanvas");
-        const ctx = canvas.getContext("2d");
+        const canvas = document.getElementById("drawCanvas"); //canvas空間
+        const ctx = canvas.getContext("2d"); //那個空間是2D
         const img = document.getElementById("cam");
         const function_three_data = document.getElementById("function_three_data");
 
         let drawing = false;
         let drawPoints = "";// 送到ros2的參數
 
-        // 讓 canvas 完美重疊影像
+        // 建立canvas空間
         function syncCanvas() {
             const rect = img.getBoundingClientRect();
             canvas.style.left = rect.left + "px";
@@ -498,13 +509,8 @@
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
 
-            // 你要「左下角為 0,0」 → 自己轉換
             let y_from_bottom = rect.height - y;
-
-            // x：右正左負
             let ix = x - centerX;
-
-            // y：上正下負
             let iy = y_from_bottom - centerY;
 
             // 顯示座標
@@ -614,10 +620,6 @@
             return String(ex);
         }
 
-        // function pad3(n) {
-        //     return String(n).padStart(3, '0');
-        // }
-
         function sendDrawDataToROS(points) {
             function_three_data.innerHTML=points;
             const msg = new ROSLIB.Message({
@@ -649,6 +651,59 @@
                 processed.style.display = "block";
             }
         });
+
+        /* ========================================= */
+        /* 繪圖功能 */
+        /* ========================================= */
+        // 畫圓
+        function draw_round() {
+            if (!carData[0]) return; // 確認原點存在
+
+            // const originX = carData[0].img_car_x;
+            // const originY = carData[0].img_car_y;
+            // carData[car_id] = { x, y, yaw, img_car_x, img_car_y };
+            const originX = carData[0].img_car_x;
+            const originY = carData[0].img_car_y;
+            console.log(originX, " ", originY)
+
+            // 畫原點
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(originX, originY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "yellow";
+            ctx.strokeStyle = "yellow";
+            ctx.font = "14px Arial";
+
+            for (let id in carData) {
+                if (Number(id) === 0) continue; // 原點已經畫過
+
+                const car = carData[id];
+                const px = car.img_car_x;
+                const py = car.img_car_y;
+
+                // 畫車子
+                ctx.beginPath();
+                ctx.arc(px, py, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 標 ID
+                ctx.fillText(`ID:${id}`, px + 8, py - 8);
+
+                // 畫箭頭表示 yaw
+                const rad = car.yaw * Math.PI / 180;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(px + 15 * Math.cos(rad), py - 15 * Math.sin(rad));
+                ctx.stroke();
+            }
+        }
+
+        //清除
+        function drow_clear(){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
         /* ========================================= */
         /* IIII. 多機控制 */
