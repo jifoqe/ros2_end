@@ -24,7 +24,12 @@ def generate_launch_description():
             package='v4l2_camera',
             executable='v4l2_camera_node',
             name='camera_node',
-            output='screen'
+            output='screen',
+            parameters=[
+                {"video_device": "/dev/video2"},   # ← 在這裡指定你的外接相機
+                # {"image_size": [640, 480]},        # 可選
+                {"pixel_format": "YUYV"}           # 可選
+            ]
         ),
 
         #讓網頁可以透過src顯示影像
