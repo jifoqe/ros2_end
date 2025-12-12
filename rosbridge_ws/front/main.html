@@ -8,6 +8,8 @@
   <title>ROS2 遠端控制介面</title>
   <link rel="stylesheet" href="main.css"> 
    <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>
+   <!-- 載入OpenCV -->
+    <script async src="./opencv.js" onload="openCvReady()"></script>
 </head>
 <body>
     <script>
@@ -348,6 +350,37 @@
             }
         });
 
+        //測試中 座標轉換
+        // let markerLength = 0.1; // Marker 實際大小 10cm
+        
+        // let cameraMatrix = cv.matFromArray(3, 3, cv.CV_64F, [
+        // fx, 0, cx,
+        // 0, fy, cy,
+        // 0, 0, 1
+        // ]);
+        // let distCoeffs = cv.matFromArray(1, 5, cv.CV_64F, [k1,k2,p1,p2,k3]);
+
+        // for (let i = 0; i < corners.size(); i++) {
+        //     let rvec = new cv.Mat();
+        //     let tvec = new cv.Mat();
+            
+        //     let cornerMat = corners.get(i);
+        //     let cornerVector = new cv.MatVector();
+        //     cornerVector.push_back(cornerMat);
+
+        //     // 計算姿態
+        //     cv.aruco.estimatePoseSingleMarkers(
+        //         cornerVector, markerLength, cameraMatrix, distCoeffs, rvec, tvec
+        //     );
+
+        //     console.log(`Marker ID ${ids.intAt(i,0)} position (tvec):`, tvec.data64F);
+        //     console.log(`Marker rotation (rvec):`, rvec.data64F);
+
+        //     // 畫座標軸
+        //     cv.aruco.drawAxis(src, cameraMatrix, distCoeffs, rvec, tvec, markerLength*0.5);
+
+        //     rvec.delete(); tvec.delete(); cornerVector.delete();
+        // }
 
 
         /* ========================================= */
