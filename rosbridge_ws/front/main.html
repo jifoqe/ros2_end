@@ -590,12 +590,20 @@
             ctx.moveTo(x, y);
         });
 
-        // 放開滑鼠 → 停止畫
+        // 放開滑鼠 → 停止畫 + 確認送出
         document.addEventListener("mouseup", () => {
             drawing = false;
 
             if (drawPoints.length > 0) {
-                sendDrawDataToROS(drawPoints);
+                // 詢問是否送出
+                const confirmSend = confirm("繪圖完成！\n\n是否送出給 ROS？");
+
+                if (confirmSend) {
+                    sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
+                } else {
+                  drawPoints = "";  // 清空
+                  newString = "3";
+                }
             }
         });
 
