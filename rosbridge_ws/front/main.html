@@ -60,6 +60,11 @@
                 <div>
                     <button onclick="draw_round()">抓車子</button>
                     <button onclick="drow_clear()">清除</button>
+
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
+                    <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="2">畫矩形</button>
+                    <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="3">畫三角形</button>
+                    <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
                 </div>
                 <!-- 開發專用 -->
                 <div>
@@ -255,6 +260,7 @@
         /* 全域參數*/
         /* ========================================= */
         let newString = "";
+        let draw_function = "";
 
         /* ========================================= */
         /* 功能選擇 */
@@ -345,7 +351,7 @@
             if (car_id > 0 && car_id < 6) {
                 // console.log("id:", car_id ,"id:", x,"id:", y);
                 const outputDiv = document.getElementById(`local-pos-${car_id}`);
-                draw_round();
+                    
                 if (outputDiv) {
                     outputDiv.innerText = `${x.toFixed(1)}, ${y.toFixed(1)}, ${yaw.toFixed(1)}`;
                 }
@@ -361,7 +367,7 @@
                 special_car_x = mouse_x.innerText;
                 special_car_y = mouse_y.innerText;
                 // 比例轉換
-                scale_number = 495/mouse_x.innerText;
+                scale_number = 500/mouse_x.innerText;
             }
         });
 
@@ -550,36 +556,66 @@
 
             if (!inside) return;
 
-            if (newString != "3") {
+            if (newString[0] != "3") {
                 alert("只有功能三才能使用");
                 return;
             }
-
-            if (car_number == "") {
-                alert("選擇車輛");
+            if (!draw_function.includes('1')) {
+                alert("需要優先選取畫線功能");
                 return;
             }
 
-            for (let i = 0; i < car_number.length; i++) {
-                newString += car_number[i];
-            }
             drawPoints += newString
             drawing = true;
 
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
 
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            // 找到最近的圓
+            let closestX = null;
+            let closestY = null;
+            let minDist = 50;
+
+            for (let i = 1; i < 6; i++) {
+                if (!carData[i]) continue;
+
+                const originX = carData[i].x * scale_number;
+                const originY = -carData[i].y * scale_number;
+
+                const dist = Math.hypot(x - originX, y - originY);
+                console.log("距離:", dist)
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestX = originX;
+                    closestY = originY;
+                    console.log("id:", i);
+                    drawPoints += String(i);
+                    drawing = true;
+                    break;
+                }else{
+                    drawing = false;
+                }
+            }
+
+            // 如果有找到最近的圓，作為起點
+            if (closestX !== null && closestY !== null && drawing ==true) {
+                // 設置 Canvas 起點
+                ctx.beginPath();
+                ctx.moveTo(closestX, closestY);
+
+                console.log("從最近圓開始畫線: ", closestX, closestY);
+            }
         });
 
         // 放開滑鼠 → 停止畫 + 確認送出
         document.addEventListener("mouseup", () => {
-            drawing = false;
+            if (drawing == false){
+                return;
+            }
 
             if (drawPoints.length > 0) {
                 // 詢問是否送出
-                const confirmSend = confirm("繪圖完成！\n\n是否送出給 ROS？");
+                const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
 
                 if (confirmSend) {
                     sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
@@ -588,6 +624,7 @@
                   newString = "3";
                 }
             }
+            drawing = false;
         });
 
         // 連續畫線
@@ -597,21 +634,18 @@
             if (!drawing) {
                 return;
             }
+
+            // if (){
+            //     alert("起始點必須要車子上面");
+            // }
             const rect = canvas.getBoundingClientRect();
             //離散化
             const raw_ix = Math.round(x / 25) * 25;
             const raw_iy = Math.round(y / 25) * 25;
 
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            // x：右正左負
-            let ix = raw_ix - centerX;
-
-            // y：上正下負
-            let iy = centerY - raw_iy;
             // 轉換成「左下角為 0,0」
-            // let ix = raw_ix;
-            // let iy = rect.height - raw_iy;
+            let ix = raw_ix;
+            let iy = raw_iy;
             ix = Math.round(ix / 25) * 25;
             iy = Math.round(iy / 25) * 25;
 
@@ -681,7 +715,30 @@
         /* ========================================= */
         /* 繪圖功能 */
         /* ========================================= */
-        // 畫圓
+        let draw_line_number=0;
+        
+        function selectMode_draw(button) {
+            // 判斷按鈕是否已經 active
+            const isActive = button.classList.contains('active');
+
+            if (isActive) {
+                // 已經 active → 點擊取消
+                button.classList.remove('active');
+            } else {
+                // 尚未 active → 點擊設為 active
+                button.classList.add('active');
+            }
+
+            // 這裡可以更新 newString 或其他資料
+            // 例如儲存目前所有 active 按鈕的 name
+            const activeButtons = Array.from(document.querySelectorAll('.action-draw-btn-function.active'))
+                                    .map(btn => btn.name);
+            draw_function = activeButtons.join(','); // 例如用逗號串起來
+
+            console.log("目前 active 按鈕:", draw_function);
+        }
+
+        // 抓車子
         function draw_round() {
             drow_clear();
             if (!carData[0]) return; // 確認原點存在
@@ -701,6 +758,9 @@
                 ctx.strokeStyle = "yellow";
                 ctx.font = "14px Arial";
             }
+        }
+        // 畫線
+        function draw_line() {
         }
 
         //清除

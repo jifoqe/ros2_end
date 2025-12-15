@@ -71,7 +71,7 @@ private:
               double y0_cm = 0.0;
               double yaw0 = 0.0;
 
-              RCLCPP_INFO(this->get_logger(), "Origin (ID %d) set.", origin_id_);
+              // RCLCPP_INFO(this->get_logger(), "Origin (ID %d) set.", origin_id_);
 
               std_msgs::msg::String pos_msg;
               char buf0[128];
@@ -110,9 +110,9 @@ private:
           double yaw_rad = atan2(R_world.at<double>(1,0), R_world.at<double>(0,0));
           double yaw_deg = -yaw_rad * 180.0 / CV_PI; // 保持之前顯示習慣的符號（如需要可調整）
 
-          RCLCPP_INFO(this->get_logger(),
-              "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
-              id, x_cm, y_cm, yaw_deg, z_cm);
+          // RCLCPP_INFO(this->get_logger(),
+          //     "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
+          //     id, x_cm, y_cm, yaw_deg, z_cm);
 
           std_msgs::msg::String pos_msg;
           // CSV: "id,x_cm,y_cm,yaw_deg"
