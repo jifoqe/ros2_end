@@ -1,6 +1,7 @@
 // http://localhost:3000/api/data
 // http://localhost:3000/api/update_machine
-// http://localhost:3000/api/login
+// http://localhost:3000/api/Login
+// http://localhost:3000/api/register
 // http://localhost/phpmyadmin/index.php?route=/&route=%2F
 // 建立 MySQL 連線
 const mysql = require('mysql2');
@@ -77,7 +78,7 @@ function loadUsers() {
 };
 loadUsers();
 
-app.post('/api/login', (req, res) => {
+app.post('/api/Login', (req, res) => {
     const { username, password ,ros_ip} = req.body;
 
     if(req.method !== 'POST'){
@@ -96,3 +97,46 @@ app.post('/api/login', (req, res) => {
 app.listen(port, () => {
   console.log(`Node.js 後端已啟動：http://localhost:${port}`);
 });
+
+
+
+// 註冊帳號 API
+app.post('/api/register', (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({
+            success: false,
+            message: '帳號或密碼錯誤'
+        });
+    }
+
+    // 預設給一般使用者權限
+    // （符合資料表 permissions NOT NULL）
+    const defaultPermission = "9";
+
+    const sql = 'INSERT INTO user_base (username, password, permissions) VALUES (?, ?, ?)';
+    connection.query(sql, [username, password, defaultPermission], (err, result) => {
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.json({
+                    success: false,
+                    message: '帳號已存在'
+                });
+            }
+            
+            console.error(err);
+            return res.status(500).json({
+                success: false,
+                message: '註冊失敗（資料庫錯誤）'
+            });
+        }
+        
+        // 註冊成功
+        res.json({
+            success: true,
+            message: '註冊成功'
+        });
+    });
+});
+

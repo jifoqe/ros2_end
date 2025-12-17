@@ -11,7 +11,7 @@
 <body>
     <div class="login-container">
         <h2>使用者登入</h2>
-        <form action="http://localhost:3000/api/login" method="POST" id="loginForm">
+        <form action="http://localhost:3000/api/Login" method="POST" id="loginForm">
              <div class="input-group">
                 <label for="username">ROS連接：</label>
                 <input type="text" id="ros_ip" name="username" placeholder="10.50.65.122" required>
@@ -28,11 +28,13 @@
             </div>
 
             <button type="submit">登入</button>
-            <!-- <div class="options">
-                <a href="#">忘記密碼?</a> | <a href="#">註冊</a>
-            </div> -->
+            <div class="options">
+                <!-- <a href="#">忘記密碼?</a> |  -->
+                <a href="register.html">註冊</a>
+            </div>
         </form>
     </div>
+    
     <script>
         const form = document.getElementById('loginForm');
         form.addEventListener('submit', async (e) => {
