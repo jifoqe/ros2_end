@@ -76,9 +76,10 @@ function loadUsers() {
     console.log(`資料：${USERS}`)
   });
 };
-loadUsers();
+
 
 app.post('/api/Login', (req, res) => {
+    loadUsers();
     const { username, password ,ros_ip} = req.body;
 
     if(req.method !== 'POST'){
