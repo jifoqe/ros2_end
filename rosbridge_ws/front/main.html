@@ -65,6 +65,12 @@
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="2">畫矩形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="3">畫三角形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
+
+
+                    <!-- <button onclick="drow_clear()">存檔</button>
+                    <form action="">
+                        <label for="">存照片</label>
+                    </form> -->
                 </div>
                 <!-- 開發專用 -->
                 <div>
@@ -108,7 +114,7 @@
                 <p>角速度：</p>
                 <p>${machine.angle_speed} m/s</p>
                 <p>當前位置：</p>
-                <p id="${localId}">(11,-02)</p>
+                <p id="${localId}">(11,-02,60)</p>
                 <p>目標位置：</p>
                 <p id="${targetId}" onclick="editTarget('${targetId}')"> 設定目標 </p>
                 <p>狀態：</p>
@@ -151,6 +157,7 @@
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="2">定點移動</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="3">繪圖控制</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">多機導航</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">初始化</button>
                 </div>
             </div>
 
@@ -424,8 +431,8 @@
             if (value === null) return;
 
             // 簡單檢查格式
-            if (!/^\s*-?\d+\s*,\s*-?\d+\s*$/.test(value)) {
-                alert("格式錯誤！請使用 x,y 格式，例如 3,5");
+            if (!/^\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+\s*$/.test(value)) {
+                alert("格式錯誤！請使用 x,y,angle 格式，例如 3,5,90");
                 return;
             }
 
@@ -451,19 +458,19 @@
 
             // 整理資料
             function extractXY(text) {
-                const match = text.match(/\((-?\d+),\s*(-?\d+)\)/);
-                return [parseInt(match[1]), parseInt(match[2])];
+                const match = text.match(/\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
+                return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
             }
 
-            const [lx, ly] = extractXY(localText);
-            const [gx, gy] = extractXY(goalText);
+            const [lx, ly, la] = extractXY(localText);
+            const [gx, gy, ga] = extractXY(goalText);
 
             // 正負好轉換
             function encode(n) {
                 const sign = n >= 0 ? "0" : "1";     // 正 = 0, 負 = 1
                 let absNum = Math.abs(n);           // 絕對值
                 // 轉成兩位數，不足補 0
-                absNum = absNum.toString().padStart(2, '0');
+                absNum = absNum.toString().padStart(3, '0');
 
                 return sign + absNum;               // e.g. "0" + "01" → "001"
             }
@@ -471,8 +478,8 @@
             const code =
                 newString +
                 String(car_number) +   // 車號
-                encode(lx) + encode(ly) +
-                encode(gx) + encode(gy);
+                encode(lx) + encode(ly) + encode(la) +
+                encode(gx) + encode(gy) + encode(ga);
 
             const msg = new ROSLIB.Message({ data: code });
             pub.publish(msg);

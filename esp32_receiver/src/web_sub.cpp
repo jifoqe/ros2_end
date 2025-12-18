@@ -29,7 +29,7 @@ public:
 private:
     std::string data_process(const std::string &web_data)
     {
-        //2 1 011 023 034 025
+        //2 1 0110 0230 0340 0250 0340 0250
         // 資料太短直接回傳錯誤
         if (web_data.size() <= 10) {
             return web_data;
@@ -44,21 +44,31 @@ private:
         if (func == '2') {
             int car     = web_data[1] - '0';
 
-            int local_x = decode_value(web_data[2], (web_data[3] - '0') * 10 + (web_data[4] - '0'));
-            int local_y = decode_value(web_data[5], (web_data[6] - '0') * 10 + (web_data[7] - '0'));
-            int goal_x  = decode_value(web_data[8], (web_data[9] - '0') * 10 + (web_data[10] - '0'));
-            int goal_y  = decode_value(web_data[11], (web_data[12] - '0') * 10 + (web_data[13] - '0'));
+            int local_x = decode_value(web_data[2], (web_data[3] - '0') * 100 + (web_data[4] - '0') * 10 + (web_data[5] - '0'));
+            int local_y = decode_value(web_data[6], (web_data[7] - '0') * 100 + (web_data[8] - '0') * 10 + (web_data[9] - '0'));
+            int local_a = decode_value(web_data[10], (web_data[11] - '0') * 100 + (web_data[12] - '0') * 10 + (web_data[13] - '0'));
+            int goal_x  = decode_value(web_data[14], (web_data[15] - '0') * 100 + (web_data[16] - '0') * 10 + (web_data[17] - '0'));
+            int goal_y  = decode_value(web_data[18], (web_data[19] - '0') * 100 + (web_data[20] - '0') * 10 + (web_data[21] - '0'));
+            int goal_a  = decode_value(web_data[22], (web_data[23] - '0') * 100 + (web_data[24] - '0') * 10 + (web_data[25] - '0'));
 
             RCLCPP_INFO(
                 this->get_logger(),
-                "解析結果: 功能=%d car=%d local(%d,%d) goal(%d,%d)",
-                func - '0', car, local_x, local_y, goal_x, goal_y
+                "解析結果: 功能=%d car=%d local(%d,%d,%d) goal(%d,%d,%d)",
+                func - '0', car, local_x, local_y, local_a, goal_x, goal_y, goal_a
             );
             std::string esp32_date = "";
             esp32_date.push_back(web_data[0]);  // 功能
             esp32_date.push_back(web_data[1]);  // 車號
-            esp32_date.push_back(move(local_x, local_y, goal_x, goal_y));       // 動作碼
-
+            if(local_a != goal_a){
+                if(local_a > goal_a){
+                    esp32_date.push_back('6');
+                }else{
+                    esp32_date.push_back('7');
+                }
+            }else{
+                esp32_date.push_back(move(local_x, local_y, goal_x, goal_y));
+            }
+            
             // 回傳格式可依你需求調整
             return esp32_date;
         }
