@@ -10,11 +10,7 @@
 <body>
 <div class="login-container">
     <h2>使用者註冊</h2>
-
-    <!-- 註冊表單 -->
-    <!-- 注意：這裡沒有 action，因為我們用 JS fetch -->
     <form id="registerForm">
-
         <div class="input-group">
             <label>帳號：</label>
             <input type="text" id="username" required>
@@ -34,61 +30,35 @@
 </div>
 
 <script>
-/* ========================================= */
-/* 註冊功能 JS */
-/* ========================================= */
-
-// 取得表單 DOM
-const form = document.getElementById("registerForm");
-
-// 監聽表單送出事件
-form.addEventListener("submit", function (e) {
-
-    // 阻止瀏覽器預設送表單（避免跳頁）
-    e.preventDefault();
-
-    // 取得使用者輸入的帳號密碼
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    /* -----------------------------------------
-       呼叫後端註冊 API
-       -----------------------------------------
-       URL： http://localhost:3000/api/register
-       Method：POST
-       Body：JSON
-    ----------------------------------------- */
-    fetch("http://localhost:3000/api/register", {
-        method: "POST",
-
-        // 告訴後端：我送的是 JSON
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        // 把帳號密碼轉成 JSON 字串
-        body: JSON.stringify({
-            username: username,
-            password: password
+    const form = document.getElementById("registerForm");
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        fetch("http://localhost:3000/api/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
         })
-    })
-    // 把回傳結果轉成 JSON
-    .then(res => res.json())
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
 
-    // 處理後端回傳資料
-    .then(data => {
-        alert(data.message);
+            if (data.success) {
+                window.location.href = "Login.html";
+            }
+        })
 
-        if (data.success) {
-            window.location.href = "Login.html";
-        }
-    })
-
-    .catch(err => {
-        console.error("註冊失敗：", err);
-        alert("無法連線到伺服器");
+        .catch(err => {
+            console.error("註冊失敗：", err);
+            alert("無法連線到伺服器");
+        });
     });
-});
 </script>
 </body>
 </html>

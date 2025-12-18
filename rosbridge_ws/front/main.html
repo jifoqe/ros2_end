@@ -362,6 +362,7 @@
                 if (outputDiv) {
                     outputDiv.innerText = `${x.toFixed(1)}, ${y.toFixed(1)}, ${yaw.toFixed(1)}`;
                 }
+                draw_round();
             }
             if (car_id == 11) {
                 const web_mouse_x = document.getElementById(`mouse_x`);
@@ -374,7 +375,8 @@
                 special_car_x = mouse_x.innerText;
                 special_car_y = mouse_y.innerText;
                 // 比例轉換
-                scale_number = 500/mouse_x.innerText;
+                scale_number_x = 550/mouse_x.innerText;
+                scale_number_y = -360/mouse_y.innerText;
             }
         });
 
@@ -586,8 +588,8 @@
             for (let i = 1; i < 6; i++) {
                 if (!carData[i]) continue;
 
-                const originX = carData[i].x * scale_number;
-                const originY = -carData[i].y * scale_number;
+                const originX = carData[i].x * scale_number_x +100;
+                const originY = -carData[i].y * scale_number_y +100;
 
                 const dist = Math.hypot(x - originX, y - originY);
                 console.log("距離:", dist)
@@ -751,8 +753,8 @@
             if (!carData[0]) return; // 確認原點存在
             for (let i = 1; i < 6; i++) {
                 if (!carData[i]) continue;
-                const originX = carData[i].x * scale_number;
-                const originY = -carData[i].y * scale_number;
+                const originX = carData[i].x * scale_number_x +100;
+                const originY = -carData[i].y * scale_number_y +100;
                 console.log("id:", i,originX, " ", originY)
 
                 // 畫原點
@@ -764,6 +766,21 @@
                 ctx.fillStyle = "yellow";
                 ctx.strokeStyle = "yellow";
                 ctx.font = "14px Arial";
+
+                const rad = carData[i].yaw * Math.PI / 180;
+                const len = 30;
+                const endX = originX + Math.cos(rad) * len;
+                const endY = originY - Math.sin(rad) * len; 
+                ctx.strokeStyle = "yellow";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(originX, originY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                // 顯示角度文字
+                ctx.fillStyle = "yellow";
+                ctx.font = "14px Arial";
+                ctx.fillText(`${carData[i].yaw}°`, originX + 12, originY - 12);
             }
         }
         // 畫線

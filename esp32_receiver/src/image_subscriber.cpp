@@ -49,7 +49,6 @@ private:
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
-        // 每個偵測到的 marker
         for (size_t i = 0; i < ids.size(); i++) {
           cv::aruco::drawAxis(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], 0.05);
 
@@ -109,10 +108,11 @@ private:
           // 從 R_world 計算 yaw（以 Z 軸為旋轉軸），跟你原本的方法類似
           double yaw_rad = atan2(R_world.at<double>(1,0), R_world.at<double>(0,0));
           double yaw_deg = -yaw_rad * 180.0 / CV_PI; // 保持之前顯示習慣的符號（如需要可調整）
+          yaw_deg = -yaw_deg;
 
-          // RCLCPP_INFO(this->get_logger(),
-          //     "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
-          //     id, x_cm, y_cm, yaw_deg, z_cm);
+          RCLCPP_INFO(this->get_logger(),
+              "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
+              id, x_cm, y_cm, yaw_deg, z_cm);
 
           std_msgs::msg::String pos_msg;
           // CSV: "id,x_cm,y_cm,yaw_deg"
@@ -120,8 +120,8 @@ private:
           std::snprintf(buf, sizeof(buf), "%d,%.6f,%.6f,%.3f", id, x_cm, y_cm, yaw_deg);
           pos_msg.data = std::string(buf);
           position_publisher_->publish(pos_msg);
-        } // for each marker
-      } // if ids not empty
+        } 
+      }
 
       cv::imshow("Camera", frame);
       cv::imshow("Gray Image", gray);

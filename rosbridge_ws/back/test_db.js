@@ -2,6 +2,7 @@
 // http://localhost:3000/api/update_machine
 // http://localhost:3000/api/Login
 // http://localhost:3000/api/register
+
 // http://localhost/phpmyadmin/index.php?route=/&route=%2F
 // 建立 MySQL 連線
 const mysql = require('mysql2');
@@ -76,8 +77,7 @@ function loadUsers() {
     console.log(`資料：${USERS}`)
   });
 };
-
-
+loadUsers();
 app.post('/api/Login', (req, res) => {
     loadUsers();
     const { username, password ,ros_ip} = req.body;
@@ -111,9 +111,6 @@ app.post('/api/register', (req, res) => {
             message: '帳號或密碼錯誤'
         });
     }
-
-    // 預設給一般使用者權限
-    // （符合資料表 permissions NOT NULL）
     const defaultPermission = "9";
 
     const sql = 'INSERT INTO user_base (username, password, permissions) VALUES (?, ?, ?)';
