@@ -60,7 +60,8 @@
                 <div>
                     <button onclick="draw_round()">抓車子</button>
                     <button onclick="drow_clear()">清除</button>
-
+                    <button onclick="draw_undo()">上一步</button>
+                    <button onclick="">下一步</button>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="2">畫矩形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="3">畫三角形</button>
@@ -510,6 +511,7 @@
 
         let drawing = false;
         let drawPoints = "";// 送到ros2的參數
+        let drawHistory = [];//繪圖歷史紀錄
         let rectState = {
             active: false,
             start: null,
@@ -553,6 +555,11 @@
             
             if (draw_function.includes("1")) {
                 drawIfNeeded(x, y);
+                // drawHistory.push({
+                //     type: "line",
+                //     from: { x: x1, y: y1 },
+                //     to:   { x: x2, y: y2 }
+                // });
             }
             if (draw_function.includes("2") && rectState.active==true) {
                 // y = -y;
@@ -647,6 +654,10 @@
             }
 
             if (drawPoints.length > 0 && draw_function.includes("2")) {
+                drawHistory.push({
+                    type: "rect",
+                    data: normalizeRect(rectState.start, rectState.current)
+                });
                 rectState.active = false;
                 const rect = normalizeRect(rectState.start, rectState.current);
                 console.log("功能2完成矩形", rect);
@@ -821,6 +832,37 @@
                 r.bottom - r.top
             );
             ctx.setLineDash([]);
+        }
+
+        //開啟歷史紀錄
+        function redrawAll() {
+            for (const item of drawHistory) {
+
+                if (item.type === "rect") {
+                    const r = item.data;
+                    ctx.strokeRect(
+                        r.left,
+                        r.top,
+                        r.right - r.left,
+                        r.bottom - r.top
+                    );
+                }
+
+                if (item.type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(item.from.x, item.from.y);
+                    ctx.lineTo(item.to.x, item.to.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        //上一步
+        function draw_undo() {
+            if (drawHistory.length === 0) return;
+            drawHistory.pop();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            redrawAll();
         }
 
         //清除
