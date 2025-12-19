@@ -55,7 +55,7 @@
                 if (result.success) {
                     alert('登入成功！');
                     // window.location.href = 'http://localhost:8000/main.html';
-                    window.location.href = `http://localhost:8000/main.html?ros_ip=${encodeURIComponent(result.ros_ip)}`;
+                    window.location.href = `http://localhost:8000/index.html?ros_ip=${encodeURIComponent(result.ros_ip)}`;
                 } else {
                     alert(result.message);
                 }
