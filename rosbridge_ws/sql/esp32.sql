@@ -17,8 +17,10 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
+USE `zeabur`;
+
 --
--- Database: `esp32`
+-- Database: `zeabur` (formerly esp32)
 --
 
 -- --------------------------------------------------------
@@ -31,7 +33,8 @@ CREATE TABLE `car_state` (
   `car_number` int NOT NULL COMMENT '車牌編號',
   `line_speed` float NOT NULL COMMENT '直線速度',
   `angle_speed` float NOT NULL COMMENT '角度速度',
-  `local_time` datetime NOT NULL COMMENT '更新時間'
+  `local_time` datetime NOT NULL COMMENT '更新時間',
+  PRIMARY KEY (`car_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='car_base_state(車子基本狀態)';
 
 --
@@ -50,11 +53,11 @@ INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`
 --
 -- Table structure for table `user_base`
 --
-
 CREATE TABLE `user_base` (
   `username` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '使用者',
   `password` char(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '密碼',
-  `permissions` enum('1','2','3','4','5','6','7','8','9') NOT NULL COMMENT '權限'
+  `permissions` enum('1','2','3','4','5','6','7','8','9') NOT NULL COMMENT '權限',
+  PRIMARY KEY (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='使用者基本資料使用者';
 
 --
