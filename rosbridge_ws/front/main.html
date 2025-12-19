@@ -62,7 +62,7 @@
                     <button onclick="drow_clear()">清除</button>
 
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
-                    <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="2">畫矩形</button>
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="2">畫矩形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="3">畫三角形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
 
@@ -362,7 +362,7 @@
                 if (outputDiv) {
                     outputDiv.innerText = `${x.toFixed(1)}, ${y.toFixed(1)}, ${yaw.toFixed(1)}`;
                 }
-                draw_round();
+                // draw_round(`
             }
             if (car_id == 11) {
                 const web_mouse_x = document.getElementById(`mouse_x`);
@@ -375,8 +375,8 @@
                 special_car_x = mouse_x.innerText;
                 special_car_y = mouse_y.innerText;
                 // 比例轉換
-                scale_number_x = 550/mouse_x.innerText;
-                scale_number_y = -360/mouse_y.innerText;
+                scale_number_x = 520/mouse_x.innerText;
+                scale_number_y = -430/mouse_y.innerText;
             }
         });
 
@@ -510,6 +510,11 @@
 
         let drawing = false;
         let drawPoints = "";// 送到ros2的參數
+        let rectState = {
+            active: false,
+            start: null,
+            current: null
+        };
 
         // 建立canvas空間
         function syncCanvas() {
@@ -542,15 +547,19 @@
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
 
-            // let y_from_bottom = rect.height - y;
-            // let ix = x - centerX;
-            // let iy = y_from_bottom - centerY;
-
             // 顯示座標
             document.getElementById("mouse_x").innerText = x.toFixed(0);
             document.getElementById("mouse_y").innerText = -y.toFixed(0);
-
-            drawIfNeeded(x, y);
+            
+            if (draw_function[0] === "1") {
+                drawIfNeeded(x, y);
+            }
+            if (draw_function[0] === "2" && rectState.active==true) {
+                // y = -y;
+                rectState.current = { x, y };
+                drow_clear();
+                drawPreviewRect(rectState.start, rectState.current);
+            }
         });
 
         // 滑鼠按下 → 開始畫
@@ -569,50 +578,53 @@
                 alert("只有功能三才能使用");
                 return;
             }
-            if (!draw_function.includes('1')) {
-                alert("需要優先選取畫線功能");
-                return;
-            }
-
+            
             drawPoints += newString
             drawing = true;
-
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
+            console.log("功能選擇：", draw_function[0]);
 
-            // 找到最近的圓
-            let closestX = null;
-            let closestY = null;
-            let minDist = 50;
+            if (draw_function[0] === "1") {
+                // 找到最近的圓
+                let closestX = null;
+                let closestY = null;
+                let minDist = 50;
 
-            for (let i = 1; i < 6; i++) {
-                if (!carData[i]) continue;
+                for (let i = 1; i < 6; i++) {
+                    if (!carData[i]) continue;
 
-                const originX = carData[i].x * scale_number_x +100;
-                const originY = -carData[i].y * scale_number_y +100;
+                    const originX = carData[i].x * scale_number_x +100;
+                    const originY = -carData[i].y * scale_number_y +100;
 
-                const dist = Math.hypot(x - originX, y - originY);
-                console.log("距離:", dist)
-                if (dist < minDist) {
-                    minDist = dist;
-                    closestX = originX;
-                    closestY = originY;
-                    console.log("id:", i);
-                    drawPoints += String(i);
-                    drawing = true;
-                    break;
-                }else{
-                    drawing = false;
+                    const dist = Math.hypot(x - originX, y - originY);
+                    console.log("距離:", dist)
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestX = originX;
+                        closestY = originY;
+                        console.log("id:", i);
+                        drawPoints += String(i);
+                        drawing = true;
+                        break;
+                    }else{
+                        drawing = false;
+                    }
+                }
+
+                // 如果有找到最近的圓，作為起點
+                if (closestX !== null && closestY !== null && drawing ==true) {
+                    ctx.beginPath();
+                    ctx.moveTo(closestX, closestY);
+
+                    console.log("從最近圓開始畫線: ", closestX, closestY);
                 }
             }
 
-            // 如果有找到最近的圓，作為起點
-            if (closestX !== null && closestY !== null && drawing ==true) {
-                // 設置 Canvas 起點
-                ctx.beginPath();
-                ctx.moveTo(closestX, closestY);
-
-                console.log("從最近圓開始畫線: ", closestX, closestY);
+            if (draw_function[0] === "2") {
+                rectState.active = true;
+                rectState.start = { x, y };
+                rectState.current = { x, y };
             }
         });
 
@@ -622,7 +634,7 @@
                 return;
             }
 
-            if (drawPoints.length > 0) {
+            if (drawPoints.length > 0 && draw_function[0] === "1") {
                 // 詢問是否送出
                 const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
 
@@ -633,6 +645,15 @@
                   newString = "3";
                 }
             }
+
+            if (drawPoints.length > 0 && draw_function[0] === "2") {
+                // drawPreviewRect(rectState.start, rectState.current);
+                rectState.active = false;
+                const rect = normalizeRect(rectState.start, rectState.current);
+                console.log("功能2完成矩形", rect);
+                return; // 功能2不送 ROS
+            }
+
             drawing = false;
         });
 
@@ -724,8 +745,6 @@
         /* ========================================= */
         /* 繪圖功能 */
         /* ========================================= */
-        let draw_line_number=0;
-        
         function selectMode_draw(button) {
             // 判斷按鈕是否已經 active
             const isActive = button.classList.contains('active');
@@ -746,7 +765,6 @@
 
             console.log("目前 active 按鈕:", draw_function);
         }
-
         // 抓車子
         function draw_round() {
             drow_clear();
@@ -783,8 +801,28 @@
                 ctx.fillText(`${carData[i].yaw}°`, originX + 12, originY - 12);
             }
         }
-        // 畫線
-        function draw_line() {
+        // 畫矩形
+        function normalizeRect(p1, p2) {
+            return {
+                left: Math.min(p1.x, p2.x),
+                right: Math.max(p1.x, p2.x),
+                top: Math.min(p1.y, p2.y),
+                bottom: Math.max(p1.y, p2.y)
+            };
+        }
+        function drawPreviewRect(p1, p2) {
+            const r = normalizeRect(p1, p2);
+
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]); // 預覽虛線
+            ctx.strokeRect(
+                r.left,
+                r.top,
+                r.right - r.left,
+                r.bottom - r.top
+            );
+            ctx.setLineDash([]);
         }
 
         //清除
