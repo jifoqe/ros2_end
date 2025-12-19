@@ -551,10 +551,10 @@
             document.getElementById("mouse_x").innerText = x.toFixed(0);
             document.getElementById("mouse_y").innerText = -y.toFixed(0);
             
-            if (draw_function[0] === "1") {
+            if (draw_function.includes("1")) {
                 drawIfNeeded(x, y);
             }
-            if (draw_function[0] === "2" && rectState.active==true) {
+            if (draw_function.includes("2") && rectState.active==true) {
                 // y = -y;
                 rectState.current = { x, y };
                 drow_clear();
@@ -585,7 +585,7 @@
             let y = event.clientY - rect.top;
             console.log("功能選擇：", draw_function[0]);
 
-            if (draw_function[0] === "1") {
+            if (draw_function.includes("1")) {
                 // 找到最近的圓
                 let closestX = null;
                 let closestY = null;
@@ -621,7 +621,7 @@
                 }
             }
 
-            if (draw_function[0] === "2") {
+            if (draw_function.includes("2")) {
                 rectState.active = true;
                 rectState.start = { x, y };
                 rectState.current = { x, y };
@@ -634,7 +634,7 @@
                 return;
             }
 
-            if (drawPoints.length > 0 && draw_function[0] === "1") {
+            if (drawPoints.length > 0 && draw_function.includes("1")) {
                 // 詢問是否送出
                 const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
 
@@ -646,12 +646,10 @@
                 }
             }
 
-            if (drawPoints.length > 0 && draw_function[0] === "2") {
-                // drawPreviewRect(rectState.start, rectState.current);
+            if (drawPoints.length > 0 && draw_function.includes("2")) {
                 rectState.active = false;
                 const rect = normalizeRect(rectState.start, rectState.current);
                 console.log("功能2完成矩形", rect);
-                return; // 功能2不送 ROS
             }
 
             drawing = false;
