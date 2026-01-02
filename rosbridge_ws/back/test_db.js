@@ -96,7 +96,7 @@ app.post('/api/Login', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Node.js 後端已啟動：http://localhost:${port}`);
+  console.log(`這是1.0 後端已啟動：http://localhost:${port}`);
 });
 
 
