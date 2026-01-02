@@ -1,7 +1,7 @@
-// http://tre.zeabur.app/:3000/api/data
-// http://tre.zeabur.app:3000/api/update_machine
-// http://tre.zeabur.app:3000/api/Login
-// http://tre.zeabur.app:3000/api/register
+// http://goof:3000/api/data
+// http://goof:3000/api/update_machine
+// http://goof:8080/api/Login
+// http://goof:3000/api/register
 // 建立 MySQL 連線
 const mysql = require('mysql2');
 const express = require("express");
@@ -23,9 +23,13 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-pool.connect(err => {
-  if (err) throw err;
-  console.log('已連接 zrabour');
+// 不要 pool.connect，直接 query 就行
+pool.query('SELECT 1', (err) => {
+  if(err) {
+    console.error("資料庫連線失敗:", err);
+  } else {
+    console.log("已連接 Zeabur 資料庫");
+  }
 });
 
 
