@@ -1,0 +1,932 @@
+<!-- python3 -m http.server 8000 -->
+<!-- http://localhost:8000/main.html -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROS2 遠端控制介面</title>
+  <link rel="stylesheet" href="main.css"> 
+   <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>    
+</head>
+<body>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const ros_ip = params.get('ros_ip');
+        fetch("http://" + ros_ip + ":3000/api/data")
+        .then(res => res.json())
+        .then(sql_data => {
+            console.log("收到 Node.js：", sql_data);
+        });
+    </script>
+
+    <header>
+        <h1>ROS2 遠端控制介面</h1>
+        <button id="logoutBtn">登出</button>
+    </header>
+
+    <main class="container">
+        <section class="video-feed-section">
+            <div class="card video-card">
+                <h2>即時影像</h2>
+                <div class="video-controls">
+                    <label for="image_change">影像來源:</label>
+                    <select id="image_change">
+                        <option value="raw">原圖 (raw)</option>
+                        <option value="processed">影像處理圖 (processed)</option>
+                    </select>
+                </div>
+                <div class="image-display-wrapper">
+                    <!-- <img id="cam" src="http://10.50.65.122:8080/stream?topic=/camera_image" alt="即時影像串流">
+                    <img id="cam_processed" src="http://10.50.65.122:8080/stream?topic=/camera_image_fix" alt="即時影像串流" style="display:none;"> -->
+                    
+                    <img id="cam" alt="即時影像串流">
+                    <img id="cam_processed" alt="即時影像串流" style="display:none;">
+                    <canvas id="drawCanvas" style="position: absolute; left: 0; top: 0;"></canvas>
+                </div>
+                <div class="x_y_position">
+                    <!-- <p>網頁座標</p> -->
+                    <p>x:</p>
+                    <p id="mouse_x">0</p>
+                    <p>y:</p>
+                    <p id="mouse_y">0</p>
+                </div>
+                <!-- 測試中12/15 劉丞翔 --> 
+                <div class="x_y_position">
+                    <!-- <p>特殊座標</p> -->
+                    <p>x:</p>
+                    <p id="mouse_camera_x">0</p>
+                    <p>y:</p>
+                    <p id="mouse_camera_y">0</p>
+                </div>
+                <div>
+                    <button onclick="draw_round()">抓車子</button>
+                    <button onclick="drow_clear()">清除</button>
+                    <button onclick="draw_undo()">上一步</button>
+                    <button onclick="">下一步</button>
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="2">畫矩形</button>
+                    <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="3">畫三角形</button>
+                    <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
+
+
+                    <!-- <button onclick="drow_clear()">存檔</button>
+                    <form action="">
+                        <label for="">存照片</label>
+                    </form> -->
+                </div>
+                <!-- 開發專用 -->
+                <div>
+                    <p id="function_three_data" style="display: none;"></p>
+                </div>
+            </div>
+            <div class="card basic-control-card" id="machines-container">
+                <h2>當前機台狀況</h2>
+                    <!-- <div>
+                        <p>機台1</p>
+                        <p>電量：</p>
+                        <p>60%</p>
+                        <p>速度：</p>
+                        <p>10m</p>
+                        <p>角速度：</p>
+                        
+                        <p>當前位置：</p>
+                        <p>(1,2)</p>
+                        <p>目標位置：</p>
+                        <p>(1,2)</p>
+                        <button>緊急停止</button>
+                    </div> -->
+            </div>
+        </section>
+
+<script>
+    function renderMachines(sql_data) {
+        const container = document.getElementById("machines-container");
+        container.innerHTML = "";
+        sql_data.forEach(machine => {
+            const div = document.createElement("div");
+            const localId = `local-pos-${machine.car_number}`;
+            const targetId = `target-pos-${machine.car_number}`;
+
+            div.innerHTML = `
+                <p>機台 ${machine.car_number}</p>
+                <p>電量：</p>
+                <p>60%</p>
+                <p>速度：</p>
+                <p>${machine.line_speed} m/s</p>
+                <p>角速度：</p>
+                <p>${machine.angle_speed} m/s</p>
+                <p>當前位置：</p>
+                <p id="${localId}">(11,-02,60)</p>
+                <p>目標位置：</p>
+                <p id="${targetId}" onclick="editTarget('${targetId}')"> 設定目標 </p>
+                <p>狀態：</p>
+                <p> 無資料 </p>
+                <div class="machine-actions-group">
+                    <button class="action-btn primary" onclick="startMoving(${machine.car_number}, '${localId}', '${targetId}')">出發</button>
+                    <button class="action-btn danger" onclick="emergencyStop(${machine.car_number})">緊急停止</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function loadMachines() {
+    fetch("http://" + ros_ip + ":3000/api/data")
+        .then(res => res.json())
+        .then(sql_data => renderMachines(sql_data))
+        .catch(err => console.error("fetch error:", err));
+    }
+
+    // 初次載入
+    loadMachines();
+</script>
+        
+
+        <section class="control-panel-section">
+            
+            <div class="card basic-control-card">
+                <h2>多機模式</h2>
+                <div class="button-group">
+                    <button class="action-btn primary" onclick="sendMsg()">關閉</button>
+                    <button class="action-btn primary" onclick="sendMsg()">啟動</button>
+                </div>
+            </div>
+
+            <div class="card function-selection-card">
+                <h2>功能模式選擇</h2>
+                <div class="button-group grid-2">
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="1">基礎方向控制</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="2">定點移動</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="3">繪圖控制</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">多機導航</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">初始化</button>
+                </div>
+            </div>
+
+            <div class="card movement-control-card">
+                <h2>基礎方向控制</h2>
+                <div id="vehicle-select-two">
+                    <input type="checkbox" id="vehicle1_check" name="vehicle_select_group" value="1">
+                    <label for="vehicle1_check">機台1</label>
+                    
+                    <input type="checkbox" id="vehicle2_check" name="vehicle_select_group" value="2">
+                    <label for="vehicle2_check">機台2</label>
+                    
+                    <input type="checkbox" id="vehicle3_check" name="vehicle_select_group" value="3">
+                    <label for="vehicle3_check">機台3</label>
+                    
+                    <input type="checkbox" id="vehicle4_check" name="vehicle_select_group" value="4">
+                    <label for="vehicle4_check">機台4</label>
+                    
+                    <input type="checkbox" id="vehicle5_check" name="vehicle_select_group" value="5">
+                    <label for="vehicle5_check">機台5</label>
+                </div>
+                <div class="movement-controls">
+                    <button class="action-btn tertiary up" onclick="send_direction('1')">⬆️ 前 (Front)</button>
+                    <button class="action-btn tertiary left" onclick="send_direction('3')">⬅️ 左轉 (Lift)</button>
+                    <button class="action-btn tertiary rotate-ccw" onclick="send_direction('6')">⟲ 逆時針 (CCW)</button>
+                    <button class="action-btn danger stop" onclick="send_direction('5')">🛑 停 (Stop)</button>
+                    <button class="action-btn tertiary rotate-cw" onclick="send_direction('7')">⟳ 順時針 (CW)</button>
+                    <button class="action-btn tertiary right" onclick="send_direction('4')">➡️ 右轉 (Right)</button>
+                    <button class="action-btn tertiary down" onclick="send_direction('2')">⬇️ 後 (Back)</button>
+                </div>
+            </div>
+
+            <div class="card advanced-control-card">
+                <h2>進階運動參數設定</h2>
+                <form id="velocity-form" onsubmit="event.preventDefault(); sendVelocityControl();">
+                    <div class="form-group">
+                        <label for="vehicle-select">選擇車輛:</label>
+                        <select id="vehicle-select" name="vehicle-select">
+                            <option value="1">車輛1</option>
+                            <option value="2">車輛2</option>
+                            <option value="3">車輛3</option>
+                            <option value="4">車輛4</option>
+                            <option value="5">車輛5</option>
+                            <option value="6">全部</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linear-speed">線速度 (m/s):</label>
+                        <input type="number" id="linear-speed" value="0.5" step="0.1" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="angular-speed">角速度 (rad/s):</label>
+                        <input type="number" id="angular-speed" value="0.0" step="0.1" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="action-btn secondary">重設</button>
+                        <button type="submit" class="action-btn primary">送出速度指令</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+<script>
+    function sendVelocityControl() {
+        const vehicleSelect = document.getElementById("vehicle-select").value;
+        const linearSpeed = parseFloat(document.getElementById("linear-speed").value);
+        const angularSpeed = parseFloat(document.getElementById("angular-speed").value);
+
+        let targets = [];
+        if(vehicleSelect === "6") {
+            // 全部車輛
+            targets = [1,2,3,4,5];
+        } else {
+            targets = [parseInt(vehicleSelect)]; 
+        }
+
+        // 逐一更新每台車輛
+        targets.forEach(car_number => {
+            fetch('http://' + ros_ip + ':3000/api/update_machine', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    car_number: Number(car_number),
+                    line_speed: linearSpeed,
+                    angle_speed: angularSpeed
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(`車輛${car_number} 更新結果:`, vehicleSelect);
+                console.log(`車輛${car_number} 更新結果:`, linearSpeed);
+                console.log(`車輛${car_number} 更新結果:`, angularSpeed);
+                console.log(`車輛${car_number} 更新結果:`, data);
+            })
+            .catch(err => console.error('更新錯誤:', err));
+        });
+
+        alert("已送出速度指令到選擇的車輛！");
+    }
+</script>
+    <script>
+        /* ========================================= */
+        /* 全域參數*/
+        /* ========================================= */
+        let newString = "";
+        let draw_function = "";
+
+        /* ========================================= */
+        /* 功能選擇 */
+        /* ========================================= */
+        function selectMode(button) {
+            // 1. 把所有按鈕的 active 拿掉
+            document.querySelectorAll('.action-btn-function').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            newString = button.name
+
+            // 2. 把點到的按鈕變成 active
+            button.classList.add('active');
+        }
+
+        /* ========================================= */
+        /* ROS的連接 */
+        /* ========================================= */
+        console.log('ROS IP:', ros_ip);
+        const raw = document.getElementById("cam");
+        const processed = document.getElementById("cam_processed");
+        cam.src = `http://${ros_ip}:8080/stream?topic=/camera_image`;
+        cam_processed.src = `http://${ros_ip}:8080/stream?topic=/camera_image_fix`;
+        
+        const ros = new ROSLIB.Ros({
+            // url: "ws://10.50.65.122:9090"
+            url: "ws://" + ros_ip + ":9090"
+        });
+
+        ros.on('connection', () => { console.log('已連接到 rosbridge'); });
+        ros.on('error', (error) => { console.log('連線錯誤: ', error); });
+        ros.on('close', () => { console.log('連線關閉'); });
+
+        // 建立 publisher
+        const pub = new ROSLIB.Topic({
+            ros: ros,
+            name: '/web_input',
+            messageType: 'std_msgs/String'
+        });
+
+        // 建立 subscriber
+        const sub = new ROSLIB.Topic({
+            ros: ros,
+            name: '/web_output',
+            messageType: 'std_msgs/String'
+        });
+
+        const camera_position_data = new ROSLIB.Topic({
+            ros: ros,
+            name: '/web_position_data',
+            messageType: 'std_msgs/String'
+        });
+
+        // 訂閱並接收資料
+        sub.subscribe((msg) => {
+            console.log("收到來自 esp32 的訊息:", msg.data);
+
+            // 你要在畫面更新也可以，例如：
+            const outputDiv = document.getElementById("ros-output");
+            if (outputDiv) {
+                outputDiv.innerText = msg.data;
+            }
+
+            if(msg.data == "1"){
+                drawPoints = document.getElementById("function_three_data").innerHTML;
+                drawPoints = drawPoints.slice(0, 2) + drawPoints.slice(10);
+                // console.log("drawPoints 目前:", drawPoints);
+                sendDrawDataToROS(drawPoints);
+            }
+        });
+        let carData = {};
+        let special_car_x;
+        let special_car_y;
+        let scale_number;
+        camera_position_data.subscribe((msg) => {
+            const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
+
+            let car_id = Number(parts[0]);
+            let x = Number(parts[1]);
+            let y = Number(parts[2]);
+            let yaw = Number(parts[3]);
+            // 更新 carData
+            carData[car_id] = { x, y, yaw,};
+
+            // 如果是 ID>0，更新畫面 div
+            if (car_id > 0 && car_id < 6) {
+                // console.log("id:", car_id ,"id:", x,"id:", y);
+                const outputDiv = document.getElementById(`local-pos-${car_id}`);
+                    
+                if (outputDiv) {
+                    outputDiv.innerText = `${x.toFixed(1)}, ${y.toFixed(1)}, ${yaw.toFixed(1)}`;
+                }
+                // draw_round(`
+            }
+            if (car_id == 11) {
+                const web_mouse_x = document.getElementById(`mouse_x`);
+                const web_mouse_y = document.getElementById(`mouse_y`);
+                const mouse_x = document.getElementById(`mouse_camera_x`);
+                const mouse_y = document.getElementById(`mouse_camera_y`);
+
+                mouse_x.innerText = x.toFixed(1);
+                mouse_y.innerText = y.toFixed(1);
+                special_car_x = mouse_x.innerText;
+                special_car_y = mouse_y.innerText;
+                // 比例轉換
+                scale_number_x = 520/mouse_x.innerText;
+                scale_number_y = -430/mouse_y.innerText;
+            }
+        });
+
+
+        /* ========================================= */
+        /* I. 功能1基本控制 */
+        /* ========================================= */
+        // 發送訊息 (用於快速測試和基礎方向控制)
+
+        let car_number = []; // 存放選中的車輛
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const checkboxes = document.querySelectorAll("#vehicle-select-two input[type='checkbox']");
+            console.log("good:", car_number);
+
+            checkboxes.forEach((cb) => {
+                cb.addEventListener("change", () => {
+                    // 收集所有被勾選的值
+                    car_number = Array.from(checkboxes)
+                                    .filter(c => c.checked)
+                                    .map(c => c.value);
+                    console.log("目前選擇車輛:", car_number);
+                });
+            });
+        });
+
+        function send_direction(data) {
+            if (newString!="1"){
+                alert("只有功能一才能使用")
+                return
+            }
+
+            newString += String(data);
+            for (let i = 0; i < car_number.length; i++) {
+                newString += car_number[i];  // 將每個車輛號碼接上
+                console.log("good:", newString);
+            }
+            
+            const msg = new ROSLIB.Message({ data: newString });
+            pub.publish(msg);
+            console.log("已發送:", newString);
+            newString = "1";
+        }
+
+        /* ========================================= */
+        /* II. 定點控制 */
+        /* ========================================= */
+        function editTarget(id) {
+            const target = document.getElementById(id);
+
+            let value = prompt("請輸入新的目標位置格式：x,y：", target.innerText.trim());
+
+            // 使用者按取消
+            if (value === null) return;
+
+            // 簡單檢查格式
+            if (!/^\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+\s*$/.test(value)) {
+                alert("格式錯誤！請使用 x,y,angle 格式，例如 3,5,90");
+                return;
+            }
+
+            target.innerText = "(" + value + ")";
+        }
+
+        function startMoving(car_number, local, goal) {
+            if (newString != "2") {
+                alert("只有功能二才能使用");
+                return;
+            }
+
+            const local_position = document.getElementById(local);
+            const goal_position = document.getElementById(goal);
+
+            if (goal_position.innerText.trim() === "設定目標") {
+                alert("請先設定目標");
+                return;
+            }
+
+            const localText = local_position.innerText.trim();
+            const goalText = goal_position.innerText.trim();
+
+            // 整理資料
+            function extractXY(text) {
+                const match = text.match(/\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
+                return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
+            }
+
+            const [lx, ly, la] = extractXY(localText);
+            const [gx, gy, ga] = extractXY(goalText);
+
+            // 正負好轉換
+            function encode(n) {
+                const sign = n >= 0 ? "0" : "1";     // 正 = 0, 負 = 1
+                let absNum = Math.abs(n);           // 絕對值
+                // 轉成兩位數，不足補 0
+                absNum = absNum.toString().padStart(3, '0');
+
+                return sign + absNum;               // e.g. "0" + "01" → "001"
+            }
+
+            const code =
+                newString +
+                String(car_number) +   // 車號
+                encode(lx) + encode(ly) + encode(la) +
+                encode(gx) + encode(gy) + encode(ga);
+
+            const msg = new ROSLIB.Message({ data: code });
+            pub.publish(msg);
+
+            console.log("已發送:", code);
+        }
+
+        //暫停功能
+        function emergencyStop(car_number){
+            newString = "5"
+            newString += String(car_number);
+            
+            const msg = new ROSLIB.Message({ data: newString });
+            pub.publish(msg);
+            console.log("已發送:", newString);
+            newString = "1";
+        }
+
+        /* ========================================= */
+        /* III. 功能2繪圖控制 */
+        /* ========================================= */
+        const canvas = document.getElementById("drawCanvas"); //canvas空間
+        const ctx = canvas.getContext("2d"); //那個空間是2D
+        const img = document.getElementById("cam");
+        const function_three_data = document.getElementById("function_three_data");
+
+        let drawing = false;
+        let drawPoints = "";// 送到ros2的參數
+        let drawHistory = [];//繪圖歷史紀錄
+        let rectState = {
+            active: false,
+            start: null,
+            current: null
+        };
+
+        // 建立canvas空間
+        function syncCanvas() {
+            const rect = img.getBoundingClientRect();
+            canvas.style.left = rect.left + "px";
+            canvas.style.top = rect.top + "px";
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        img.onload = syncCanvas;
+        window.onresize = syncCanvas;
+
+        // 記錄滑鼠位置
+        document.addEventListener("mousemove", (event) => {
+            
+            const rect = canvas.getBoundingClientRect();
+
+            const inside =
+                event.clientX >= rect.left &&
+                event.clientX <= rect.right &&
+                event.clientY >= rect.top &&
+                event.clientY <= rect.bottom;
+
+            if (!inside) return;
+
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            // 顯示座標
+            document.getElementById("mouse_x").innerText = x.toFixed(0);
+            document.getElementById("mouse_y").innerText = -y.toFixed(0);
+            
+            if (draw_function.includes("1")) {
+                drawIfNeeded(x, y);
+                // drawHistory.push({
+                //     type: "line",
+                //     from: { x: x1, y: y1 },
+                //     to:   { x: x2, y: y2 }
+                // });
+            }
+            if (draw_function.includes("2") && rectState.active==true) {
+                // y = -y;
+                rectState.current = { x, y };
+                drow_clear();
+                drawPreviewRect(rectState.start, rectState.current);
+            }
+        });
+
+        // 滑鼠按下 → 開始畫
+        document.addEventListener("mousedown", (event) => {
+            const rect = canvas.getBoundingClientRect();
+
+            const inside =
+                event.clientX >= rect.left &&
+                event.clientX <= rect.right &&
+                event.clientY >= rect.top &&
+                event.clientY <= rect.bottom;
+
+            if (!inside) return;
+
+            if (newString[0] != "3") {
+                alert("只有功能三才能使用");
+                return;
+            }
+            
+            drawPoints += newString
+            drawing = true;
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+            console.log("功能選擇：", draw_function[0]);
+
+            if (draw_function.includes("1")) {
+                // 找到最近的圓
+                let closestX = null;
+                let closestY = null;
+                let minDist = 50;
+
+                for (let i = 1; i < 6; i++) {
+                    if (!carData[i]) continue;
+
+                    const originX = carData[i].x * scale_number_x +100;
+                    const originY = -carData[i].y * scale_number_y +100;
+
+                    const dist = Math.hypot(x - originX, y - originY);
+                    console.log("距離:", dist)
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestX = originX;
+                        closestY = originY;
+                        console.log("id:", i);
+                        drawPoints += String(i);
+                        drawing = true;
+                        break;
+                    }else{
+                        drawing = false;
+                    }
+                }
+
+                // 如果有找到最近的圓，作為起點
+                if (closestX !== null && closestY !== null && drawing ==true) {
+                    ctx.beginPath();
+                    ctx.moveTo(closestX, closestY);
+
+                    console.log("從最近圓開始畫線: ", closestX, closestY);
+                }
+            }
+
+            if (draw_function.includes("2")) {
+                rectState.active = true;
+                rectState.start = { x, y };
+                rectState.current = { x, y };
+            }
+        });
+
+        // 放開滑鼠 → 停止畫 + 確認送出
+        document.addEventListener("mouseup", () => {
+            if (drawing == false){
+                return;
+            }
+
+            if (drawPoints.length > 0 && draw_function.includes("1")) {
+                // 詢問是否送出
+                const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
+
+                if (confirmSend) {
+                    sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
+                } else {
+                  drawPoints = "";  // 清空
+                  newString = "3";
+                }
+            }
+
+            if (drawPoints.length > 0 && draw_function.includes("2")) {
+                drawHistory.push({
+                    type: "rect",
+                    data: normalizeRect(rectState.start, rectState.current)
+                });
+                rectState.active = false;
+                const rect = normalizeRect(rectState.start, rectState.current);
+                console.log("功能2完成矩形", rect);
+            }
+
+            drawing = false;
+        });
+
+        // 連續畫線
+        let last_ix = null;
+        let last_iy = null;
+        function drawIfNeeded(x, y) {
+            if (!drawing) {
+                return;
+            }
+
+            // if (){
+            //     alert("起始點必須要車子上面");
+            // }
+            const rect = canvas.getBoundingClientRect();
+            //離散化
+            const raw_ix = Math.round(x / 25) * 25;
+            const raw_iy = Math.round(y / 25) * 25;
+
+            // 轉換成「左下角為 0,0」
+            let ix = raw_ix;
+            let iy = raw_iy;
+            ix = Math.round(ix / 25) * 25;
+            iy = Math.round(iy / 25) * 25;
+
+            if (ix === last_ix && iy === last_iy) {
+                return;  // 不重複送出
+            }
+            last_ix = ix;
+            last_iy = iy;
+            
+            console.log("x:",ix ,"y:",iy)
+            // drawPoints += pad3(ix) + pad3
+            drawPoints += encodeCoord(ix);
+            drawPoints += encodeCoord(iy);
+
+            ctx.lineTo(raw_ix, raw_iy);
+            // ctx.lineTo(x, y);
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function encodeCoord(x) {
+            let ex;
+
+            // x 負數就加 1000，正數就加 100
+            if (x < 0) {
+                ex = 1000 + Math.abs(x); 
+            } else {
+                ex = String(x).padStart(4, '0'); 
+            }
+
+            return String(ex);
+        }
+
+        function sendDrawDataToROS(points) {
+            function_three_data.innerHTML=points;
+            const msg = new ROSLIB.Message({
+                data: points
+            });
+
+            pub.publish(msg);
+            console.log("已傳給 ROS:", points);
+            drawPoints = "";  // 清空紀錄
+            newString = "3";
+        }
+
+        /* ========================================= */
+        /* 照片選擇 */
+        /* ========================================= */
+        document.getElementById("image_change").addEventListener("change", function() {
+            const value = this.value;
+            console.log("選擇成功")
+
+            // 全部先隱藏
+            raw.style.display = "none";
+            processed.style.display = "none";
+
+            // 再顯示選到的
+            if (value === "raw") {
+                raw.style.display = "block";
+            } 
+            else if (value === "processed") {
+                processed.style.display = "block";
+            }
+        });
+
+        /* ========================================= */
+        /* 繪圖功能 */
+        /* ========================================= */
+        function selectMode_draw(button) {
+            // 判斷按鈕是否已經 active
+            const isActive = button.classList.contains('active');
+
+            if (isActive) {
+                // 已經 active → 點擊取消
+                button.classList.remove('active');
+            } else {
+                // 尚未 active → 點擊設為 active
+                button.classList.add('active');
+            }
+
+            // 這裡可以更新 newString 或其他資料
+            // 例如儲存目前所有 active 按鈕的 name
+            const activeButtons = Array.from(document.querySelectorAll('.action-draw-btn-function.active'))
+                                    .map(btn => btn.name);
+            draw_function = activeButtons.join(','); // 例如用逗號串起來
+
+            console.log("目前 active 按鈕:", draw_function);
+        }
+        // 抓車子
+        function draw_round() {
+            drow_clear();
+            if (!carData[0]) return; // 確認原點存在
+            for (let i = 1; i < 6; i++) {
+                if (!carData[i]) continue;
+                const originX = carData[i].x * scale_number_x +100;
+                const originY = -carData[i].y * scale_number_y +100;
+                console.log("id:", i,originX, " ", originY)
+
+                // 畫原點
+                ctx.fillStyle = "red";
+                ctx.beginPath();
+                ctx.arc(originX, originY, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = "yellow";
+                ctx.strokeStyle = "yellow";
+                ctx.font = "14px Arial";
+
+                const rad = carData[i].yaw * Math.PI / 180;
+                const len = 30;
+                const endX = originX + Math.cos(rad) * len;
+                const endY = originY - Math.sin(rad) * len; 
+                ctx.strokeStyle = "yellow";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(originX, originY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                // 顯示角度文字
+                ctx.fillStyle = "yellow";
+                ctx.font = "14px Arial";
+                ctx.fillText(`${carData[i].yaw}°`, originX + 12, originY - 12);
+            }
+        }
+        // 畫矩形
+        function normalizeRect(p1, p2) {
+            return {
+                left: Math.min(p1.x, p2.x),
+                right: Math.max(p1.x, p2.x),
+                top: Math.min(p1.y, p2.y),
+                bottom: Math.max(p1.y, p2.y)
+            };
+        }
+        function drawPreviewRect(p1, p2) {
+            const r = normalizeRect(p1, p2);
+
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]); // 預覽虛線
+            ctx.strokeRect(
+                r.left,
+                r.top,
+                r.right - r.left,
+                r.bottom - r.top
+            );
+            ctx.setLineDash([]);
+        }
+
+        //開啟歷史紀錄
+        function redrawAll() {
+            for (const item of drawHistory) {
+
+                if (item.type === "rect") {
+                    const r = item.data;
+                    ctx.strokeRect(
+                        r.left,
+                        r.top,
+                        r.right - r.left,
+                        r.bottom - r.top
+                    );
+                }
+
+                if (item.type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(item.from.x, item.from.y);
+                    ctx.lineTo(item.to.x, item.to.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        //上一步
+        function draw_undo() {
+            if (drawHistory.length === 0) return;
+            drawHistory.pop();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            redrawAll();
+        }
+
+        //清除
+        function drow_clear(){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        /* ========================================= */
+        /* IIII. 多機控制 */
+        /* ========================================= */
+        function sendMsg() {
+            if (newString != "4") {
+                alert("只有功能四才能使用");
+                return;
+            }
+
+            const set_goal_position = [[1,2],[1,3],[2,2],[7,2],[6,2],];
+            let local_position;
+            let goal_position;
+            let total_car_date = "4";
+
+            for (let i = 0; i < set_goal_position.length; i++) {
+                local_position = document.getElementById(`local-pos-${i+1}`);
+                goal_position = document.getElementById(`target-pos-${i+1}`);
+                // console.log("已發送:", goal_position.innerText);
+                if (goal_position) {
+                    goal_position.innerHTML = set_goal_position[i].join(',');
+                }
+
+                let local_text = local_position.innerText.replace(/[()（）]/g, '');
+                let goal_text  = goal_position.innerText.replace(/[()（）]/g, '');
+                console.log("1已發送:", local_text);
+
+                let [local_text_x, local_text_y] = local_text.split(',');
+                let [goal_text_x, goal_text_y]  = goal_text.split(',');
+
+                
+                console.log("2已發送:", local_text_y);
+                total_car_date += String(i+1)
+                total_car_date += encodeCoord(local_text_x);
+                total_car_date += encodeCoord(local_text_y);
+                total_car_date += encodeCoord(goal_text_x);
+                total_car_date += encodeCoord(goal_text_y);
+            }
+
+            const msg = new ROSLIB.Message({ data: String(total_car_date) });
+            pub.publish(msg);
+            console.log("3已發送:", total_car_date);
+        }
+
+        /* ========================================= */
+        /* IV 特殊功能 */
+        /* ========================================= */
+
+        /* ========================================= */
+        /* IV 登出 */
+        /* ========================================= */
+        const logoutBtn = document.getElementById("logoutBtn");
+        logoutBtn.addEventListener("click", function() {
+            localStorage.removeItem("ros_ip");
+
+            window.location.href = "http://" + ros_ip + ":8000/index.html";
+        });
+
+    </script>
+</body>
+</html>
