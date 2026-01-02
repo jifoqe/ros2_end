@@ -1,29 +1,31 @@
-// http://localhost:3000/api/data
-// http://localhost:3000/api/update_machine
-// http://localhost:3000/api/Login
-// http://localhost:3000/api/register
-
-// http://localhost/phpmyadmin/index.php?route=/&route=%2F
+// http://tre.zeabur.app/:3000/api/data
+// http://tre.zeabur.app:3000/api/update_machine
+// http://tre.zeabur.app:3000/api/Login
+// http://tre.zeabur.app:3000/api/register
 // 建立 MySQL 連線
 const mysql = require('mysql2');
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'jerry',
-  password: '000000',
-  database: 'esp32'
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,
+  port: Number(process.env.MYSQL_PORT),
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
+
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
-connection.connect(err => {
+pool.connect(err => {
   if (err) throw err;
-  console.log('已連接 MySQL');
+  console.log('已連接 zrabour');
 });
 
 
@@ -32,7 +34,7 @@ connection.connect(err => {
 app.get("/api/data", (req, res) => {
   const sql = "SELECT * FROM car_state";
   
-  connection.query(sql, (err, results) => {
+  pool.query(sql, (err, results) => {
     if (err) {
       console.error("查詢失敗:", err);
       return res.status(500).json({ error: err.message });
@@ -48,7 +50,7 @@ app.post('/api/update_machine', (req, res) => {
     const now = new Date().toLocaleString('zh-TW', { hour12: false }).replace('/', '-').replace('/', '-');
     const sql = 'UPDATE car_state SET line_speed = ?, angle_speed = ?, local_time = ? WHERE car_number = ?';
     
-    connection.query(sql, [line_speed, angle_speed, now, car_number], (err, result) => {
+    pool.query(sql, [line_speed, angle_speed, now, car_number], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ success: false, message: '更新失敗' });
@@ -63,7 +65,7 @@ let USERS = [];
 function loadUsers() {
   const sql = "SELECT username, password FROM user_base";
   
-  connection.query(sql, (err, results) => {
+  pool.query(sql, (err, results) => {
     if (err) {
       console.error("查詢失敗:", err);
       return;
@@ -114,7 +116,7 @@ app.post('/api/register', (req, res) => {
     const defaultPermission = "9";
 
     const sql = 'INSERT INTO user_base (username, password, permissions) VALUES (?, ?, ?)';
-    connection.query(sql, [username, password, defaultPermission], (err, result) => {
+    pool.query(sql, [username, password, defaultPermission], (err, result) => {
         if (err) {
             if (err.code === 'ER_DUP_ENTRY') {
                 return res.json({
