@@ -111,47 +111,48 @@ app.post('/api/Login', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Node.js 後端已啟動：http://localhost:${port}`);
-  console.log("DB_HOST:", process.env.DB_HOST);
-  console.log("DB_PORT:", process.env.DB_PORT);
-  console.log("DB_USER:", process.env.DB_USER);
-  console.log("DB_NAME:", process.env.DB_NAME);
+  console.log("MYSQL_HOST:", process.env.MYSQL_HOST);
+  console.log("MYSQL_PORT:", process.env.MYSQL_PORT);
+  console.log("MYSQL_USER:", process.env.MYSQL_USER);
+  console.log("MYSQL_PASSWORD:", process.env.MYSQL_PASSWORD);
+  console.log("MYSQL_DATABASE:", process.env.MYSQL_DATABASE);
 });
 
+
+
 // 註冊帳號 API
-app.post('/api/register', async (req, res) => {
-    try {
-      const { username, password } = req.body;
+app.post('/api/register', (req, res) => {
+    const { username, password } = req.body;
 
-      if (!username || !password) {
-          return res.status(400).json({
-              success: false,
-              message: '帳號或密碼錯誤'
-          });
-      }
-      const defaultPermission = "9";
-
-      const sql = 'INSERT INTO user_base (username, password, permissions) VALUES (?, ?, ?)';
-      const connection = await pool.getConnection();
-      const [result] = await connection.query(sql, [username, password, defaultPermission]);
-      connection.release();
-      
-      // 註冊成功
-      res.json({
-          success: true,
-          message: '註冊成功'
-      });
-    } catch (err) {
-      if (err.code === 'ER_DUP_ENTRY') {
-          return res.json({
-              success: false,
-              message: '帳號已存在'
-          });
-      }
-      
-      console.error(err);
-      res.status(500).json({
-          success: false,
-          message: '註冊失敗（資料庫錯誤）'
-      });
+    if (!username || !password) {
+        return res.status(400).json({
+            success: false,
+            message: '帳號或密碼錯誤'
+        });
     }
+    const defaultPermission = "9";
+
+    const sql = 'INSERT INTO user_base (username, password, permissions) VALUES (?, ?, ?)';
+    pool.query(sql, [username, password, defaultPermission], (err, result) => {
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.json({
+                    success: false,
+                    message: '帳號已存在'
+                });
+            }
+            
+            console.error(err);
+            return res.status(500).json({
+                success: false,
+                message: '註冊失敗（資料庫錯誤）'
+            });
+        }
+        
+        // 註冊成功
+        res.json({
+            success: true,
+            message: '註冊成功'
+        });
     });
+});
