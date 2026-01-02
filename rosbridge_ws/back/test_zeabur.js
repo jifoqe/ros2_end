@@ -103,6 +103,11 @@ app.post('/api/Login', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Node.js 後端已啟動：http://localhost:${port}`);
+  console.log("MYSQL_HOST:", process.env.MYSQL_HOST);
+  console.log("MYSQL_PORT:", process.env.MYSQL_PORT);
+  console.log("MYSQL_USER:", process.env.MYSQL_USER);
+  console.log("MYSQL_PASSWORD:", process.env.MYSQL_PASSWORD);
+  console.log("MYSQL_DATABASE:", process.env.MYSQL_DATABASE);
 });
 
 
