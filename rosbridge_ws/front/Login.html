@@ -11,7 +11,8 @@
 <body>
     <div class="login-container">
         <h2>使用者登入</h2>
-        <form action="http://localhost:3000/api/Login" method="POST" id="loginForm">
+        <!-- <form action="http://10.225.173.122:3000/api/Login" method="POST" id="loginForm"> -->
+        <form method="POST" id="loginForm">
              <div class="input-group">
                 <label for="username">ROS連接：</label>
                 <input type="text" id="ros_ip" name="username" placeholder="10.50.65.122" required>
@@ -37,6 +38,24 @@
     
     <script>
         const form = document.getElementById('loginForm');
+        let ip = 0;
+        // 動態設定 ip
+        form.addEventListener("submit", function (e) {
+            ip = document.getElementById("ros_ip").value.trim();
+
+            // 基本檢查
+            if (!ip) {
+                alert("請輸入 IP");
+                e.preventDefault();
+                return;
+            }
+
+            // 組出 action
+            this.action = `http://${ip}:3000/api/Login`;
+
+            console.log("送出到：", this.action);
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault(); // 阻止表單預設刷新行為
 
@@ -55,7 +74,8 @@
                 if (result.success) {
                     alert('登入成功！');
                     // window.location.href = 'http://localhost:8000/main.html';
-                    window.location.href = `http://localhost:8000/index.html?ros_ip=${encodeURIComponent(result.ros_ip)}`;
+                    // window.location.href = `http://localhost:8000/index.html?ros_ip=${encodeURIComponent(result.ros_ip)}`;
+                    window.location.href = `http://${ip}:8000/index.html?ros_ip=${encodeURIComponent(result.ros_ip)}`;
                 } else {
                     alert(result.message);
                 }

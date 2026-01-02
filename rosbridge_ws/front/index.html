@@ -1,5 +1,5 @@
 <!-- python3 -m http.server 8000 -->
-<!-- http://localhost:8000/main.html -->
+<!-- http://localhost:8000/index.html -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -7,11 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ROS2 遠端控制介面</title>
   <link rel="stylesheet" href="main.css"> 
-   <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>    
 </head>
 <body>
     <script>
-        fetch("http://localhost:3000/api/data")
+        const params = new URLSearchParams(window.location.search);
+        const ros_ip = params.get('ros_ip');
+        fetch("http://" + ros_ip + ":3000/api/data")
         .then(res => res.json())
         .then(sql_data => {
             console.log("收到 Node.js：", sql_data);
@@ -130,7 +132,7 @@
     }
 
     function loadMachines() {
-    fetch("http://localhost:3000/api/data")
+    fetch("http://" + ros_ip + ":3000/api/data")
         .then(res => res.json())
         .then(sql_data => renderMachines(sql_data))
         .catch(err => console.error("fetch error:", err));
@@ -241,7 +243,7 @@
 
         // 逐一更新每台車輛
         targets.forEach(car_number => {
-            fetch('http://localhost:3000/api/update_machine', {
+            fetch('http://' + ros_ip + ':3000/api/update_machine', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -287,8 +289,6 @@
         /* ========================================= */
         /* ROS的連接 */
         /* ========================================= */
-        const params = new URLSearchParams(window.location.search);
-        const ros_ip = params.get('ros_ip');
         console.log('ROS IP:', ros_ip);
         const raw = document.getElementById("cam");
         const processed = document.getElementById("cam_processed");
@@ -924,7 +924,7 @@
         logoutBtn.addEventListener("click", function() {
             localStorage.removeItem("ros_ip");
 
-            window.location.href = "http://localhost:8000/Login.html";
+            window.location.href = "http://" + ros_ip + ":8000/Login.html";
         });
 
     </script>
