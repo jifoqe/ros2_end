@@ -315,15 +315,14 @@
 
 
 
-// http://goof:3000/api/data
-// http://goof:3000/api/update_machine
-// http://goof:8080/api/Login
-// http://goof:3000/api/register
+// http://goof.zeabur.app:3000/api/data
+// http://goof.zeabur.app:3000/api/update_machine
+// https://goof.zeabur.app:8080/api/Login
+// http://goof.zeabur.app:3000/api/register
 // 建立 MySQL 連線
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 const express = require("express");
 const cors = require("cors");
-require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -331,87 +330,80 @@ app.use(cors());
 app.use(express.json());
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: process.env.MYSQL_HOST,
+  port: Number(process.env.MYSQL_PORT),
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
 
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
 });
 
-// 測試連線
-pool.getConnection()
-  .then(connection => {
-    console.log("✅ 已連接 Zeabur 資料庫");
-    connection.release();
-  })
-  .catch(err => {
-    console.error("❌ 資料庫連線失敗:", err.message);
-  });
+// 不要 pool.connect，直接 query 就行
+pool.query('SELECT 1', (err) => {
+  if(err) {
+    console.error("資料庫連線失敗:", err);
+  } else {
+    console.log("已連接 Zeabur 資料庫");
+  }
+});
 
 
 
 // 連接前端初始化生成
-app.get("/api/data", async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [results] = await connection.query("SELECT * FROM car_state");
-    connection.release();
-    console.log(`資料：`, results);
+app.get("/api/data", (req, res) => {
+  const sql = "SELECT * FROM car_state";
+  
+  pool.query(sql, (err, results) => {
+    if (err) {
+      console.error("查詢失敗:", err);
+      return res.status(500).json({ error: err.message });
+    }
+    console.log(`資料：${results}`)
     res.json(results);
-  } catch (err) {
-    console.error("查詢失敗:", err);
-    res.status(500).json({ error: err.message });
-  }
+  });
 });
 
 // 更新機台資料 API
-app.post('/api/update_machine', async (req, res) => {
-    try {
-      const { car_number, line_speed, angle_speed } = req.body;
-      const now = new Date().toLocaleString('zh-TW', { hour12: false }).replace('/', '-').replace('/', '-');
-      const sql = 'UPDATE car_state SET line_speed = ?, angle_speed = ?, local_time = ? WHERE car_number = ?';
-      
-      const connection = await pool.getConnection();
-      const [result] = await connection.query(sql, [line_speed, angle_speed, now, car_number]);
-      connection.release();
-      
-      res.json({ success: true, message: '更新成功', result });
-      console.log('更新資料:', { car_number, line_speed, angle_speed, now });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ success: false, message: '更新失敗' });
-    }
+app.post('/api/update_machine', (req, res) => {
+    const { car_number, line_speed, angle_speed } = req.body;
+    const now = new Date().toLocaleString('zh-TW', { hour12: false }).replace('/', '-').replace('/', '-');
+    const sql = 'UPDATE car_state SET line_speed = ?, angle_speed = ?, local_time = ? WHERE car_number = ?';
+    
+    pool.query(sql, [line_speed, angle_speed, now, car_number], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: '更新失敗' });
+        }
+        res.json({ success: true, message: '更新成功', result });
+        console.log('更新資料:', { car_number, line_speed, angle_speed, now });
+    });
 });
 
 // 登入帳號密碼
 let USERS = [];
+function loadUsers() {
+  const sql = "SELECT username, password FROM user_base";
+  
+  pool.query(sql, (err, results) => {
+    if (err) {
+      console.error("查詢失敗:", err);
+      return;
+    }
 
-async function loadUsers() {
-  try {
-    const connection = await pool.getConnection();
-    const [results] = await connection.query("SELECT username, password FROM user_base");
-    connection.release();
-    
     USERS = results.map(row => ({
       username: row.username,
       password: row.password
     }));
-    
-    console.log(`資料：`, USERS);
-  } catch (err) {
-    console.error("查詢失敗:", err);
-  }
-}
 
+    console.log(`資料：${USERS}`)
+  });
+};
 loadUsers();
-
-app.post('/api/Login', async (req, res) => {
-    await loadUsers();
-    const { username, password, ros_ip } = req.body;
+app.post('/api/Login', (req, res) => {
+    loadUsers();
+    const { username, password ,ros_ip} = req.body;
 
     if(req.method !== 'POST'){
       return res.status(405).send('method not allowed');
