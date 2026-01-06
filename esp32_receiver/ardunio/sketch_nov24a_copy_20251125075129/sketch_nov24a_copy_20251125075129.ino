@@ -5,7 +5,7 @@ const char* ssid = "realme GT NEO 3";
 const char* pass = "00000000";
 
 WiFiUDP udp;
-const char* host = "140.125.201.53"; // ROS2 server IP
+const char* host = "10.225.173.122"; // ROS2 server IP
 const int port = 8888;               // ROS2 server port
 
 void setup() {
