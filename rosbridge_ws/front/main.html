@@ -834,6 +834,58 @@
             ctx.setLineDash([]);
         }
 
+        // 畫三角形
+        // 根據兩個點計算三角形的三個頂點
+        // p1：三角形頂點
+        // p2：底邊中心點
+        function getTrianglePoints(p1, p2) {
+           const baseWidth = 40; // 底邊寬度
+
+           // 計算 p1 → p2 的向量
+           const dx = p2.x - p1.x;
+           const dy = p2.y - p1.y;
+           // 向量長度（避免除以 0）
+           const len = Math.sqrt(dx * dx + dy * dy) || 1;
+           // 單位向量（方向）
+           const ux = dx / len;
+           const uy = dy / len;
+           // 垂直向量（用來算底邊左右）
+           const px = -uy;
+           const py = ux;
+           // 底邊左點
+           const b1 = {
+             x: p2.x + px * baseWidth / 2,
+             y: p2.y + py * baseWidth / 2
+           };
+            // 底邊右點
+            const b2 = {
+              x: p2.x - px * baseWidth / 2,
+              y: p2.y - py * baseWidth / 2
+            };
+            // 回傳三角形三個頂點
+            return [p1, b1, b2];
+        }
+
+        // 畫滑鼠拖曳的三角形預覽（虛線）
+        function drawPreviewTriangle(p1, p2) {
+           // 取得三角形三個點
+           const [a, b, c] = getTrianglePoints(p1, p2);
+            // 設定三角形樣式
+           ctx.strokeStyle = "green";
+           ctx.lineWidth = 2;
+           ctx.setLineDash([6, 4]); // 虛線
+           // 畫三角形
+           cctx.beginPath();
+           cctx.moveTo(a.x, a.y);
+           cctx.lineTo(b.x, b.y);
+           cctx.lineTo(c.x, c.y);
+           cctx.closePath();
+           cctx.stroke();
+           // 還原為實線
+           ctx.setLineDash([]);
+        }
+
+
         //開啟歷史紀錄
         function redrawAll() {
             for (const item of drawHistory) {
