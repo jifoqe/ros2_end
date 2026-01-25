@@ -62,12 +62,15 @@
                 <div>
                     <button onclick="draw_round()">抓車子</button>
                     <button onclick="drow_clear()">清除</button>
-                    <button onclick="draw_undo()">上一步</button>
-                    <button onclick="">下一步</button>
+                    <button onclick="draw_last()">上一步</button>
+                    <button onclick="draw_next()">下一步</button>
+
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="2">畫矩形</button>
                     <button class="action-draw-btn-function secondary" onclick="triangleModeToggle(this)" name="3">畫三角形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
+
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="5">移動</button>
 
 
                     <!-- <button onclick="drow_clear()">存檔</button>
@@ -590,7 +593,7 @@
                     trianglePoints[1].screenX, trianglePoints[1].screenY);
                 return;
             }
-            
+
             if (draw_function.includes("1")) {
                 drawIfNeeded(x, y);
                 // drawHistory.push({
@@ -604,6 +607,13 @@
                 rectState.current = { x, y };
                 drow_clear();
                 drawPreviewRect(rectState.start, rectState.current);
+            }
+
+            if (draw_function.includes("5")) {
+                // y = -y;
+                rectState.current = { x, y };
+                drow_clear();
+                draw_move(rectState.start, rectState.current, 0, 0);
             }
         });
 
@@ -735,28 +745,35 @@
                 rectState.start = { x, y };
                 rectState.current = { x, y };
             }
+
+            if (draw_function.includes("5")) {
+                rectState.active = true;
+                rectState.start = { x, y };
+                rectState.current = { x, y };
+            }
         });
 
         // 放開滑鼠 → 停止畫 + 確認送出
         document.addEventListener("mouseup", () => {
+            ctx.beginPath();
             if (drawing == false){
                 return;
             }
 
             if (drawPoints.length > 0 && draw_function.includes("1")) {
-                // 詢問是否送出
                 const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
 
                 if (confirmSend) {
                     sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
                 } else {
-                  drawPoints = "";  // 清空
+                  drawPoints = "";
                   newString = "3";
                 }
             }
 
+            //紀錄歷史紀錄
             if (drawPoints.length > 0 && draw_function.includes("2")) {
-                drawHistory.push({
+                drawHistory.unshift({
                     type: "rect",
                     data: normalizeRect(rectState.start, rectState.current)
                 });
@@ -780,7 +797,6 @@
             //     alert("起始點必須要車子上面");
             // }
             const rect = canvas.getBoundingClientRect();
-            //離散化
             const raw_ix = Math.round(x / 25) * 25;
             const raw_iy = Math.round(y / 25) * 25;
 
@@ -856,41 +872,55 @@
         /* ========================================= */
         /* 繪圖功能 */
         /* ========================================= */
+        // function selectMode_draw(button) {
+        //     // 判斷按鈕是否已經 active
+        //     const isActive = button.classList.contains('active');
+
+        //     if (isActive) {
+        //         // 已經 active → 點擊取消
+        //         button.classList.remove('active');
+        //     } else {
+        //         // 尚未 active → 點擊設為 active
+        //         button.classList.add('active');
+        //     }
+
+        //     // 這裡可以更新 newString 或其他資料
+        //     // 例如儲存目前所有 active 按鈕的 name
+        //     const activeButtons = Array.from(document.querySelectorAll('.action-draw-btn-function.active'))
+        //                             .map(btn => btn.name);
+        //     draw_function = activeButtons.join(','); // 例如用逗號串起來
+
+        //     console.log("目前 active 按鈕:", draw_function);
+        // }
+
         function selectMode_draw(button) {
-            // 判斷按鈕是否已經 active
-            const isActive = button.classList.contains('active');
+            // 先把所有按鈕的 active 拿掉
+            document
+                .querySelectorAll('.action-draw-btn-function.active')
+                .forEach(btn => btn.classList.remove('active'));
 
-            if (isActive) {
-                // 已經 active → 點擊取消
-                button.classList.remove('active');
-            } else {
-                // 尚未 active → 點擊設為 active
-                button.classList.add('active');
-            }
+            // 再把目前點擊的設為 active
+            button.classList.add('active');
 
-            // 這裡可以更新 newString 或其他資料
-            // 例如儲存目前所有 active 按鈕的 name
-            const activeButtons = Array.from(document.querySelectorAll('.action-draw-btn-function.active'))
-                                    .map(btn => btn.name);
-            draw_function = activeButtons.join(','); // 例如用逗號串起來
+            // 只會剩下一個 active
+            draw_function = button.name;
 
-            console.log("目前 active 按鈕:", draw_function);
+            console.log("目前選擇的功能:", draw_function);
         }
 
         // ===== 三角形模式啟動函數 =====
-            function triangleModeToggle(button) {
-    document.querySelectorAll('.action-draw-btn-function').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    button.classList.add('active');
-    
-    triangleMode = true;
-    trianglePoints = [];
-    previewTriangle = false;
-    drow_clear();
-    console.log("進入三角形模式");
-}
-
+        function triangleModeToggle(button) {
+            document.querySelectorAll('.action-draw-btn-function').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            triangleMode = true;
+            trianglePoints = [];
+            previewTriangle = false;
+            drow_clear();
+            console.log("進入三角形模式");
+        }
 
 
         // 抓車子
@@ -929,6 +959,8 @@
                 ctx.fillText(`${carData[i].yaw}°`, originX + 12, originY - 12);
             }
         }
+
+
         // 畫矩形
         function normalizeRect(p1, p2) {
             return {
@@ -955,35 +987,35 @@
 
         // 畫實線三角形
         function drawTrianglePreview(p1x, p1y, p2x, p2y) {
-                const baseWidth = 40;
-                const dx = p2x - p1x;
-                const dy = p2y - p1y;
-                const len = Math.sqrt(dx * dx + dy * dy) || 1;
-                const ux = dx / len;
-                const uy = dy / len;
-                const px = -uy;
-                const py = ux;
+            const baseWidth = 40;
+            const dx = p2x - p1x;
+            const dy = p2y - p1y;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const ux = dx / len;
+            const uy = dy / len;
+            const px = -uy;
+            const py = ux;
 
-                const a = { x: p1x, y: p1y };
-                const b1 = { x: p2x + px * baseWidth / 2, y: p2y + py * baseWidth / 2 };
-                const b2 = { x: p2x - px * baseWidth / 2, y: p2y - py * baseWidth / 2 };
+            const a = { x: p1x, y: p1y };
+            const b1 = { x: p2x + px * baseWidth / 2, y: p2y + py * baseWidth / 2 };
+            const b2 = { x: p2x - px * baseWidth / 2, y: p2y - py * baseWidth / 2 };
 
-                ctx.strokeStyle = "orange";    // 橙色虛線框
-                ctx.lineWidth = 2;
-                ctx.setLineDash([8, 8]);       // 虛線
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(b1.x, b1.y);
-                ctx.lineTo(b2.x, b2.y);
-                ctx.closePath();
-                ctx.stroke();
-                ctx.setLineDash([]);           // 恢復實線
-            }
+            ctx.strokeStyle = "orange";    // 橙色虛線框
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);       // 虛線
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b1.x, b1.y);
+            ctx.lineTo(b2.x, b2.y);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);           // 恢復實線
+        }
 
-            // ===== 3. 最終綠色三角形框 =====
-                function drawTriangleScreen(p1x, p1y, p2x, p2y) {
-                    const baseWidth = 40;
-                }
+        // ===== 3. 最終綠色三角形框 =====
+        function drawTriangleScreen(p1x, p1y, p2x, p2y) {
+            const baseWidth = 40;
+        }
 
         // 畫三角形
         // 根據兩個點計算三角形的三個頂點
@@ -1037,10 +1069,24 @@
         }
 
 
-        //開啟歷史紀錄
+        //移動物件(劉丞翔 尚未完成)
+        function draw_move(p1, p2, x, y) {
+            const item = drawHistory[0]
+            ctx.strokeStyle = "blue";
+            if (item.type === "rect") {
+                const r = item.data;
+                ctx.strokeRect(
+                    r.left,
+                    r.top,
+                    r.right - r.left,
+                    r.bottom - r.top
+                );
+            }
+        }
+
+        //全部的紀錄
         function redrawAll() {
             for (const item of drawHistory) {
-
                 if (item.type === "rect") {
                     const r = item.data;
                     ctx.strokeRect(
@@ -1060,16 +1106,55 @@
             }
         }
 
-        //上一步
-        function draw_undo() {
-            if (drawHistory.length === 0) return;
-            drawHistory.pop();
+        //顯示上下一步的紀錄
+        function draw_choose() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            redrawAll();
+
+            for (let i = 0; i < history_number; i++) {
+                if(i == history_number-1){
+                    const item = drawHistory[i];
+                    ctx.strokeStyle = "blue";
+                    if (item.type === "rect") {
+                        const r = item.data;
+                        ctx.strokeRect(
+                            r.left,
+                            r.top,
+                            r.right - r.left,
+                            r.bottom - r.top
+                        );
+                    }
+
+                    if (item.type === "line") {
+                        ctx.beginPath();
+                        ctx.moveTo(item.from.x, item.from.y);
+                        ctx.lineTo(item.to.x, item.to.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+
+        //上一步
+        let history_number = 0;
+        function draw_last() {
+            if (drawHistory.length === 0) return;
+            // drawHistory.pop();
+            // ctx.clearRect(0, 0, canvas.width, canvas.height);
+            history_number += 1;
+            draw_choose();
+        }
+
+        //下一步
+        function draw_next() {
+            if (history_number === 0) return;
+            history_number -= 1;
+            draw_choose();
         }
 
         //清除
         function drow_clear(){
+            // history_number = 0;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
