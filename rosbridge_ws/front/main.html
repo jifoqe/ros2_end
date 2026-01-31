@@ -67,7 +67,7 @@
 
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="2">畫矩形</button>
-                    <button class="action-draw-btn-function secondary" onclick="triangleModeToggle(this)" name="3">畫三角形</button>
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="3">畫三角形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
 
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="5">移動</button>
@@ -274,10 +274,6 @@
         /* ========================================= */
         let newString = "";
         let draw_function = "";
-        let triangleMode = false;
-        let trianglePoints = [];           // [端點1, 端點2]
-        let isTriangleAdjusting = false;   // 是否在調整模式
-        let previewTriangle = false;       // 是否顯示預覽
 
 
         /* ========================================= */
@@ -525,6 +521,13 @@
             start: null,
             current: null
         };
+        let triState = { 
+            active: false, 
+            start: null, 
+            end: null 
+        };
+        let historynumber = 0; 
+
 
         // 建立canvas空間
         function syncCanvas() {
@@ -557,42 +560,18 @@
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
 
+            // 三角形拖拉預覽
+            if (draw_function.includes('3') && triState.active) {
+                triState.end = { x: x, y: y };  // 更新 end 座標
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                redrawAll();  // 重畫歷史
+                drawPreviewTri(triState.start, triState.end);  // 橘色虛線預覽
+            }
+
             // 顯示座標
             document.getElementById("mouse_x").innerText = x.toFixed(0);
             document.getElementById("mouse_y").innerText = -y.toFixed(0);
 
-             // ===== 新增：三角形預覽邏輯 =====
-            if (previewTriangle && trianglePoints.length === 2) {
-                const rect = canvas.getBoundingClientRect();
-                const mouseX = event.clientX - rect.left;
-                const mouseY = event.clientY - rect.top;
-
-                // 清除畫面並重畫端點
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                draw_round();  // 重畫車子位置
-
-                // 重畫端點 A
-                ctx.fillStyle = "red";
-                ctx.beginPath();
-                ctx.arc(trianglePoints[0].screenX, trianglePoints[0].screenY, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = "white";
-                ctx.font = "bold 16px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText("A", trianglePoints[0].screenX, trianglePoints[0].screenY + 4);
-
-                // 重畫端點 B  
-                ctx.fillStyle = "blue";
-                ctx.beginPath();
-                ctx.arc(trianglePoints[1].screenX, trianglePoints[1].screenY, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillText("B", trianglePoints[1].screenX, trianglePoints[1].screenY + 4);
-
-                // 畫預覽三角形框
-                drawTrianglePreview(trianglePoints[0].screenX, trianglePoints[0].screenY,
-                    trianglePoints[1].screenX, trianglePoints[1].screenY);
-                return;
-            }
 
             if (draw_function.includes("1")) {
                 drawIfNeeded(x, y);
@@ -608,6 +587,14 @@
                 drow_clear();
                 drawPreviewRect(rectState.start, rectState.current);
             }
+
+            if (draw_function.includes('3')) {
+                if (triState.active) {
+                    drow_clear();
+                    drawPreviewTri(triState.start, { x: x, y: y });
+                }
+            }
+
 
             if (draw_function.includes("5")) {
                 // y = -y;
@@ -631,69 +618,6 @@
 
             if (newString[0] != "3") {
                 alert("只有功能三才能使用");
-                return;
-            }
-
-            // ===== 三角形模式(三角形邏輯) =====
-            if (triangleMode) {
-                const rect = canvas.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const ix = Math.round((x - centerX) / 25) * 25;
-                const iy = Math.round((centerY - y) / 25) * 25;
-
-                if (trianglePoints.length === 0) {
-                    // 第1下：第一端點 A
-                    trianglePoints.push({ x: ix, y: iy, screenX: x, screenY: y });
-                    ctx.fillStyle = "red";
-                    ctx.beginPath();
-                    ctx.arc(x, y, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = "white";
-                    ctx.font = "bold 16px Arial";
-                    ctx.textAlign = "center";
-                    ctx.fillText("A", x, y + 4);
-                }
-                else if (trianglePoints.length === 1) {
-                    // 第2下：第二端點 B
-                    trianglePoints.push({ x: ix, y: iy, screenX: x, screenY: y });
-                    ctx.fillStyle = "blue";
-                    ctx.beginPath();
-                    ctx.arc(x, y, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = "white";
-                    ctx.fillText("B", x, y + 4);
-
-                    // 啟動預覽模式
-                    previewTriangle = true;
-                    isTriangleAdjusting = true;
-                }
-                else {
-                    // 第3下：確認最終大小
-                    for (let i = 0; i < car_number.length; i++) {
-                        newString += car_number[i];
-                    }
-                    drawPoints += newString;
-                    drawPoints += encodeCoord(trianglePoints[0].x) + encodeCoord(trianglePoints[0].y);
-                    drawPoints += encodeCoord(trianglePoints[1].x) + encodeCoord(trianglePoints[1].y);
-
-                    // 畫最終綠色框線
-                    drawTriangleScreen(trianglePoints[0].screenX, trianglePoints[0].screenY,
-                        trianglePoints[1].screenX, trianglePoints[1].screenY);
-
-                    const confirmSend = confirm("📊 三角形完成！是否送出給 ROS？");
-                    if (confirmSend) {
-                        sendDrawDataToROS(drawPoints);
-                    }
-                    // 重置
-                    triangleMode = false;
-                    trianglePoints = [];
-                    previewTriangle = false;
-                    isTriangleAdjusting = false;
-                }
                 return;
             }
 
@@ -746,6 +670,13 @@
                 rectState.current = { x, y };
             }
 
+            if (draw_function.includes('3')) {
+                triState.active = true;
+                triState.start = { x: x, y: y };
+                triState.end = { x: x, y: y };
+            }
+
+
             if (draw_function.includes("5")) {
                 rectState.active = true;
                 rectState.start = { x, y };
@@ -781,6 +712,25 @@
                 const rect = normalizeRect(rectState.start, rectState.current);
                 console.log("功能2完成矩形", rect);
             }
+
+            if (draw_function.includes('3')) {
+                const tri = normalizeTri(triState.start, triState.end);
+                drawHistory.unshift({ type: 'tri', data: tri });
+                triState.active = false;
+
+                console.log('功能3完成三角形', tri);  // ← 這行顯示訊息
+
+                // 發送：模式3 + 頂點座標 + 底邊右頂點座標
+                drawPoints += '3';
+                drawPoints += encodeCoord(tri.start.x);
+                drawPoints += encodeCoord(tri.start.y);
+                drawPoints += encodeCoord(tri.end.x);
+                drawPoints += encodeCoord(tri.end.y);
+                sendDrawDataToROS(drawPoints);
+                drawing = false;
+            }
+
+
 
             drawing = false;
         });
@@ -908,20 +858,6 @@
             console.log("目前選擇的功能:", draw_function);
         }
 
-        // ===== 三角形模式啟動函數 =====
-        function triangleModeToggle(button) {
-            document.querySelectorAll('.action-draw-btn-function').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            button.classList.add('active');
-            
-            triangleMode = true;
-            trianglePoints = [];
-            previewTriangle = false;
-            drow_clear();
-            console.log("進入三角形模式");
-        }
-
 
         // 抓車子
         function draw_round() {
@@ -985,88 +921,71 @@
             ctx.setLineDash([]);
         }
 
-        // 畫實線三角形
-        function drawTrianglePreview(p1x, p1y, p2x, p2y) {
-            const baseWidth = 40;
-            const dx = p2x - p1x;
-            const dy = p2y - p1y;
-            const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            const ux = dx / len;
-            const uy = dy / len;
-            const px = -uy;
-            const py = ux;
-
-            const a = { x: p1x, y: p1y };
-            const b1 = { x: p2x + px * baseWidth / 2, y: p2y + py * baseWidth / 2 };
-            const b2 = { x: p2x - px * baseWidth / 2, y: p2y - py * baseWidth / 2 };
-
-            ctx.strokeStyle = "orange";    // 橙色虛線框
-            ctx.lineWidth = 2;
-            ctx.setLineDash([8, 8]);       // 虛線
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b1.x, b1.y);
-            ctx.lineTo(b2.x, b2.y);
-            ctx.closePath();
-            ctx.stroke();
-            ctx.setLineDash([]);           // 恢復實線
-        }
-
-        // ===== 3. 最終綠色三角形框 =====
-        function drawTriangleScreen(p1x, p1y, p2x, p2y) {
-            const baseWidth = 40;
-        }
-
         // 畫三角形
-        // 根據兩個點計算三角形的三個頂點
-        // p1：三角形頂點
-        // p2：底邊中心點
-        function getTrianglePoints(p1, p2) {
-           const baseWidth = 40; // 底邊寬度
-
-           // 計算 p1 → p2 的向量
-           const dx = p2.x - p1.x;
-           const dy = p2.y - p1.y;
-           // 向量長度（避免除以 0）
-           const len = Math.sqrt(dx * dx + dy * dy) || 1;
-           // 單位向量（方向）
-           const ux = dx / len;
-           const uy = dy / len;
-           // 垂直向量（用來算底邊左右）
-           const px = -uy;
-           const py = ux;
-           // 底邊左點
-           const b1 = {
-             x: p2.x + px * baseWidth / 2,
-             y: p2.y + py * baseWidth / 2
-           };
-            // 底邊右點
-            const b2 = {
-              x: p2.x - px * baseWidth / 2,
-              y: p2.y - py * baseWidth / 2
+        function normalizeTri(p1, p2) {
+                return {
+                start: p1,  // 頂點
+                end: p2,    // 底邊頂點
+                left: Math.min(p1.x, p2.x),
+                right: Math.max(p1.x, p2.x),
+                top: Math.min(p1.y, p2.y),
+                bottom: Math.max(p1.y, p2.y)
             };
-            // 回傳三角形三個頂點
-            return [p1, b1, b2];
-        }
+                
+            }
 
-        // 畫滑鼠拖曳的三角形預覽（虛線）
-        function drawPreviewTriangle(p1, p2) {
-           // 取得三角形三個點
-           const [a, b, c] = getTrianglePoints(p1, p2);
-            // 設定三角形樣式
-           ctx.strokeStyle = "green";
-           ctx.lineWidth = 2;
-           ctx.setLineDash([6, 4]); // 虛線
-           // 畫三角形
-           cctx.beginPath();
-           cctx.moveTo(a.x, a.y);
-           cctx.lineTo(b.x, b.y);
-           cctx.lineTo(c.x, c.y);
-           cctx.closePath();
-           cctx.stroke();
-           // 還原為實線
-           ctx.setLineDash([]);
-        }
+        function drawPreviewTri(p1, p2) {  // p1=start(頂點), p2=end(底邊右頂點)
+                ctx.strokeStyle = 'orange';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 4]);   // 虛線橘色
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);           // 頂點
+                ctx.lineTo(p2.x, p2.y);           // 底邊右頂點
+                //三角形
+                // 計算底邊左頂點（與頂點中點垂直，等長）
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const perpX = -dy;  // 垂直向量
+                const perpY = dx;
+                const len = Math.sqrt(perpX * perpX + perpY * perpY);
+                const leftX = midX - perpX / len * 80;  // 底邊左頂點（寬度40px）
+                const leftY = midY - perpY / len * 80;
+                ctx.lineTo(leftX, leftY);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+
+        // function drawTri(triData) {
+        //         const p1 = triData.start;
+        //         const p2 = triData.end;
+
+        //         // ctx.strokeStyle = 'orange';
+        //         // ctx.lineWidth = 3;
+        //         // ctx.setLineDash([8, 8]);  // 虛線
+
+        //         ctx.beginPath();
+        //         ctx.moveTo(p1.x, p1.y);
+        //         ctx.lineTo(p2.x, p2.y);
+        //         // 計算底邊左頂點
+        //         const midX = (p1.x + p2.x) / 2;
+        //         const midY = (p1.y + p2.y) / 2;
+        //         const dx = p2.x - p1.x;
+        //         const dy = p2.y - p1.y;
+        //         const perpX = -dy;
+        //         const perpY = dx;
+        //         const len = Math.sqrt(perpX * perpX + perpY * perpY);
+        //         const leftX = midX - perpX / len * 40;
+        //         const leftY = midY - perpY / len * 40;
+        //         ctx.lineTo(leftX, leftY);
+        //         ctx.closePath();
+        //         ctx.stroke();
+        //         ctx.setLineDash([]);  // 重置
+        //     }
+
 
 
         //移動物件(劉丞翔 尚未完成)
@@ -1086,6 +1005,9 @@
 
         //全部的紀錄
         function redrawAll() {
+
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             for (const item of drawHistory) {
                 if (item.type === "rect") {
                     const r = item.data;
@@ -1103,25 +1025,59 @@
                     ctx.lineTo(item.to.x, item.to.y);
                     ctx.stroke();
                 }
+
+                if (item.type === 'tri') {
+                    // 新增：跟 draw_choose() 一樣的邏輯
+                    ctx.save();
+                    ctx.strokeStyle = 'orange';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([]);  // 實線
+
+                    const p1 = item.data.start;
+                    const p2 = item.data.end;
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+
+                    const midX = (p1.x + p2.x) / 2;
+                    const midY = (p1.y + p2.y) / 2;
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const perpX = -dy;
+                    const perpY = dx;
+                    const len = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+                    const leftX = midX - perpX / len * 40;
+                    const leftY = midY - perpY / len * 40;
+
+                    ctx.lineTo(leftX, leftY);
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
             }
         }
 
         //顯示上下一步的紀錄
         function draw_choose() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            for (let i = 0; i < history_number; i++) {
-                if(i == history_number-1){
+                for (let i = 0; i < history_number; i++) {
+                    if (i >= drawHistory.length || !drawHistory[i]) {
+                        console.log('跳過無效歷史項目 i=', i);
+                        continue;
+                    }
+
                     const item = drawHistory[i];
-                    ctx.strokeStyle = "blue";
+
+                    // 矩形：保持你原本的藍色邏輯（最後一筆藍色）
+                    if (i === history_number - 1) {
+                        ctx.strokeStyle = "blue";
+                    }
+
                     if (item.type === "rect") {
                         const r = item.data;
-                        ctx.strokeRect(
-                            r.left,
-                            r.top,
-                            r.right - r.left,
-                            r.bottom - r.top
-                        );
+                        ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
                     }
 
                     if (item.type === "line") {
@@ -1130,9 +1086,42 @@
                         ctx.lineTo(item.to.x, item.to.y);
                         ctx.stroke();
                     }
+
+                    // 三角形：獨立處理
+                    if (item.type === 'tri') {
+                        ctx.save();
+                        ctx.strokeStyle = 'orange';
+                        ctx.lineWidth = 3;
+                        ctx.setLineDash([]);  // 實線
+
+                        // 用 drawPreviewTri 的計算邏輯（40px寬度）
+                        const p1 = item.data.start;
+                        const p2 = item.data.end;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+
+                        const midX = (p1.x + p2.x) / 2;
+                        const midY = (p1.y + p2.y) / 2;
+                        const dx = p2.x - p1.x;
+                        const dy = p2.y - p1.y;
+                        const perpX = -dy;
+                        const perpY = dx;
+                        const len = Math.sqrt(perpX * perpX + perpY * perpY);
+                        const leftX = midX - perpX / len * 40;  // ✅ 跟預覽一樣的40px
+                        const leftY = midY - perpY / len * 40;
+
+                        ctx.lineTo(leftX, leftY);
+                        ctx.closePath();
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+
                 }
             }
-        }
+
+
 
 
         //上一步
@@ -1154,7 +1143,7 @@
 
         //清除
         function drow_clear(){
-            // history_number = 0;
+            history_number = 0;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
