@@ -1046,8 +1046,8 @@
                     const perpX = -dy;
                     const perpY = dx;
                     const len = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
-                    const leftX = midX - perpX / len * 40;
-                    const leftY = midY - perpY / len * 40;
+                    const leftX = midX - perpX / len * 80;
+                    const leftY = midY - perpY / len * 80;
 
                     ctx.lineTo(leftX, leftY);
                     ctx.closePath();
@@ -1107,9 +1107,9 @@
                         const dy = p2.y - p1.y;
                         const perpX = -dy;
                         const perpY = dx;
-                        const len = Math.sqrt(perpX * perpX + perpY * perpY);
-                        const leftX = midX - perpX / len * 40;  // ✅ 跟預覽一樣的40px
-                        const leftY = midY - perpY / len * 40;
+                        const len = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+                        const leftX = midX - perpX / len * 80;  // 跟預覽一樣的8px
+                        const leftY = midY - perpY / len * 80;
 
                         ctx.lineTo(leftX, leftY);
                         ctx.closePath();
