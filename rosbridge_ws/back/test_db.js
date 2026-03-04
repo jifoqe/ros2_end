@@ -140,6 +140,76 @@ app.post('/api/register', (req, res) => {
 });
 
 
+//畫正方形及畫三角形
+// ===== 1. 存形狀 API =====
+app.post('/api/save_shape', (req, res) => {
+  const { shape, describe, data, serial_number } = req.body;
+
+  // 決定用哪個資料表
+  let table = shape === 'square' ? 'draw_square_data' : 'draw_triangle_data';
+
+  const sql = `INSERT INTO ${table} (shape, data, describe, serial_number) VALUES (?, ?, ?, ?)`;
+
+  connection.query(sql, [shape, JSON.stringify(data), describe, serial_number], (err, result) => {
+    if (err) {
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.json({ success: false, message: '編號已存在' });
+      }
+      console.error('存檔錯誤:', err);
+      return res.status(500).json({ success: false, message: '存檔失敗' });
+    }
+
+    console.log(`存檔成功: ${shape} #${serial_number}`);
+    res.json({ success: true, id: result.insertId });
+  });
+});
+
+// ===== 2. 載入形狀清單 API =====
+app.get('/api/shapes/:type', (req, res) => {
+  const type = req.params.type;  // 'square' 或 'triangle'
+  const table = type === 'square' ? 'draw_square_data' : 'draw_triangle_data';
+
+  const sql = `SELECT shape, data, describe, serial_number FROM ${table} ORDER BY id DESC`;
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('查詢形狀失敗:', err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    // 把 JSON 字串轉回物件
+    const shapes = results.map(row => ({
+      ...row,
+      data: JSON.parse(row.data)
+    }));
+
+    console.log(`載入 ${type}: ${shapes.length} 筆`);
+    res.json(shapes);
+  });
+});
+
+// ===== 3. 刪除形狀 API =====
+app.delete('/api/shape/:type/:id', (req, res) => {
+  const type = req.params.type;  // 'square' 或 'triangle'
+  const id = req.params.id;      // 資料 ID
+  const table = type === 'square' ? 'draw_square_data' : 'draw_triangle_data';
+
+  const sql = `DELETE FROM ${table} WHERE id = ?`;
+
+  connection.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('刪除失敗:', err);
+      return res.status(500).json({ success: false, message: '刪除失敗' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.json({ success: false, message: '找不到該資料' });
+    }
+
+    console.log(`刪除成功: ${type} ID=${id}`);
+    res.json({ success: true, message: '刪除成功' });
+  });
+});
 
 
 
