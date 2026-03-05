@@ -64,7 +64,7 @@
                     <button onclick="draw_last()">上一步</button>
                     <button onclick="draw_next()">下一步</button>
                     <button onclick="">存檔</button>
-                    <button onclick="">歷史紀錄</button>
+                    <button onclick=""  id="history_log">歷史紀錄</button>
                     <br>
                     <br>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
@@ -149,6 +149,39 @@
         
 
         <section class="control-panel-section">
+
+            <div class="card basic-control-card" style="display:none;"  id="shape_control_card">
+                <h2>三角形與正方形</h2>
+                <table border="1" cellpadding="10" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>shape</th>
+                            <th>date</th>
+                            <th>describe</th>
+                            <th>serial_number</th>
+                            <th>open</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>？</td>
+                            <td>？？</td>
+                            <td>？？？</td>
+                            <td><button>顯示</button></td>
+                        </tr>
+
+                        <tr>
+                            <td>2</td>
+                            <td>？</td>
+                            <td>？？</td>
+                            <td>？？？</td>
+                            <td><button>顯示</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             
             <div class="card basic-control-card">
                 <h2>多機模式</h2>
@@ -1062,69 +1095,78 @@
 
         //顯示上下一步的紀錄
         function draw_choose() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                for (let i = 0; i < history_number; i++) {
-                    if (i >= drawHistory.length || !drawHistory[i]) {
-                        console.log('跳過無效歷史項目 i=', i);
-                        continue;
-                    }
-
-                    const item = drawHistory[i];
-
-                    // 矩形：保持你原本的藍色邏輯（最後一筆藍色）
-                    if (i === history_number - 1) {
-                        ctx.strokeStyle = "blue";
-                    }
-
-                    if (item.type === "rect") {
-                        const r = item.data;
-                        ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
-                    }
-
-                    if (item.type === "line") {
-                        ctx.beginPath();
-                        ctx.moveTo(item.from.x, item.from.y);
-                        ctx.lineTo(item.to.x, item.to.y);
-                        ctx.stroke();
-                    }
-
-                    // 三角形：獨立處理
-                    if (item.type === 'tri') {
-                        ctx.save();
-                        ctx.strokeStyle = 'orange';
-                        ctx.lineWidth = 3;
-                        ctx.setLineDash([]);  // 實線
-
-                        // 用 drawPreviewTri 的計算邏輯（40px寬度）
-                        const p1 = item.data.start;
-                        const p2 = item.data.end;
-                        ctx.beginPath();
-                        ctx.moveTo(p1.x, p1.y);
-                        ctx.lineTo(p2.x, p2.y);
-
-                        const midX = (p1.x + p2.x) / 2;
-                        const midY = (p1.y + p2.y) / 2;
-                        const dx = p2.x - p1.x;
-                        const dy = p2.y - p1.y;
-                        const perpX = -dy;
-                        const perpY = dx;
-                        const len = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
-                        const leftX = midX - perpX / len * 80;  // 跟預覽一樣的8px
-                        const leftY = midY - perpY / len * 80;
-
-                        ctx.lineTo(leftX, leftY);
-                        ctx.closePath();
-                        ctx.stroke();
-                        ctx.restore();
-                    }
-
-
+            for (let i = 0; i < history_number; i++) {
+                if (i >= drawHistory.length || !drawHistory[i]) {
+                    console.log('跳過無效歷史項目 i=', i);
+                    continue;
                 }
+
+                const item = drawHistory[i];
+
+                // 矩形：保持你原本的藍色邏輯（最後一筆藍色）
+                if (i === history_number - 1) {
+                    ctx.strokeStyle = "blue";
+                }
+
+                if (item.type === "rect") {
+                    const r = item.data;
+                    ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
+                }
+
+                if (item.type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(item.from.x, item.from.y);
+                    ctx.lineTo(item.to.x, item.to.y);
+                    ctx.stroke();
+                }
+
+                // 三角形：獨立處理
+                if (item.type === 'tri') {
+                    ctx.save();
+                    ctx.strokeStyle = 'orange';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([]);  // 實線
+
+                    // 用 drawPreviewTri 的計算邏輯（40px寬度）
+                    const p1 = item.data.start;
+                    const p2 = item.data.end;
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+
+                    const midX = (p1.x + p2.x) / 2;
+                    const midY = (p1.y + p2.y) / 2;
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const perpX = -dy;
+                    const perpY = dx;
+                    const len = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+                    const leftX = midX - perpX / len * 80;  // 跟預覽一樣的8px
+                    const leftY = midY - perpY / len * 80;
+
+                    ctx.lineTo(leftX, leftY);
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+
             }
+        }
 
 
+        //顯示三角形與正方形的歷史資料
+        document.getElementById("history_log").addEventListener("click", function () {
+            const card = document.getElementById("shape_control_card");
 
+            if (card.style.display === "none") {
+                card.style.display = "block";   // 顯示
+            } else {
+                card.style.display = "none";    // 隱藏
+            }
+        });
 
         //上一步
         let history_number = 0;
