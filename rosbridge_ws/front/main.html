@@ -63,16 +63,16 @@
                     <button onclick="drow_clear()">清除</button>
                     <button onclick="draw_last()">上一步</button>
                     <button onclick="draw_next()">下一步</button>
-                    <button onclick="">存檔</button>
                     <button onclick=""  id="history_log">歷史紀錄</button>
+                    <button onclick=""  id="settings">設定</button>
                     <br>
                     <br>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="1">畫線</button>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="2">畫矩形</button>
                     <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="3">畫三角形</button>
                     <button class="action-draw-btn-function secondary" onclick="draw_line(), selectMode_draw(this)" name="4">畫多邊形</button>
-                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="5">移動</button>
-                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="6">旋轉</button>
+                    <!-- <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="5">移動</button>
+                    <button class="action-draw-btn-function secondary" onclick="selectMode_draw(this)" name="6">旋轉</button> -->
 
 
                     <!-- <button onclick="drow_clear()">存檔</button>
@@ -152,44 +152,86 @@
 
             <div class="card basic-control-card" style="display:none;"  id="shape_control_card">
                 <h2>三角形與正方形</h2>
+                <div>
+                    <label><input type="radio" name="shape" value="square"></label>
+                    <label>正方形</label>
+                    <label><input type="radio" name="shape" value="triangle"></label>
+                    <label>三角形</label>
+                </div>
                 <table border="1" cellpadding="10" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>shape</th>
                             <th>date</th>
+                            <th>x</th>
+                            <th>y</th>
                             <th>describe</th>
-                            <th>serial_number</th>
-                            <th>open</th>
+                            <th>settings</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         <tr>
-                            <td>1</td>
-                            <td>？</td>
-                            <td>？？</td>
-                            <td>？？？</td>
-                            <td><button>顯示</button></td>
+                            <td>3/6</td>
+                            <td>100</td>
+                            <td>100</td>
+                            <td>木板</td>
+                            <td><button onclick="setValue(this)">設定</button></td>
                         </tr>
 
                         <tr>
-                            <td>2</td>
-                            <td>？</td>
-                            <td>？？</td>
-                            <td>？？？</td>
-                            <td><button>顯示</button></td>
+                            <td>3/6</td>
+                            <td>50</td>
+                            <td>50</td>
+                            <td>鐵板</td>
+                            <td><button onclick="setValue(this)">設定</button></td>
+                        </tr>
+
+                        <tr>
+                            <td>3/6</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>初始設定</td>
+                            <td><button onclick="setValue(this)">設定</button></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <div class="card basic-control-card"  style="display:none;" id="settings_control_card">
+                <h2>設定</h2>
+                <form id="velocity-form" onsubmit="event.preventDefault(); sendVelocityControl();">
+                    <div class="form-group">
+                        <label for="vehicle-select">選擇形狀:</label>
+                        <select id="vehicle-select" name="vehicle-select">
+                            <option value="1">正方形</option>
+                            <option value="2">三角形</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linear-speed">x:</label>
+                        <input type="number" id="square_x" value="0" step="25" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="angular-speed">y:</label>
+                        <input type="number" id="square_y" value="0" step="25" min="0" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="action-btn secondary">重設</button>
+                        <button type="submit" class="action-btn primary">存入資料庫</button>
+                    </div>
+                </form>
+            </div>
             
-            <div class="card basic-control-card">
+            <!-- <div class="card basic-control-card">
                 <h2>多機模式</h2>
                 <div class="button-group">
                     <button class="action-btn primary" onclick="sendMsg()">關閉</button>
                     <button class="action-btn primary" onclick="sendMsg()">啟動</button>
                 </div>
-            </div>
+            </div> -->
 
             <div class="card function-selection-card">
                 <h2>功能模式選擇</h2>
@@ -554,12 +596,17 @@
         let rectState = {
             active: false,
             start: null,
-            current: null
+            current: null,
+            model: false
         };
         let triState = { 
             active: false, 
             start: null, 
             end: null 
+        };
+        let database_car_data = {
+            x: 0,
+            y: 0
         };
         let historynumber = 0; 
 
@@ -577,8 +624,7 @@
         window.onresize = syncCanvas;
 
         // 記錄滑鼠位置
-        document.addEventListener("mousemove", (event) => {
-            
+        document.addEventListener("mousemove", (event) => {            
             const rect = canvas.getBoundingClientRect();
 
             const inside =
@@ -618,9 +664,17 @@
             }
             if (draw_function.includes("2") && rectState.active==true) {
                 // y = -y;
-                rectState.current = { x, y };
-                drow_clear();
-                drawPreviewRect(rectState.start, rectState.current);
+                if (rectState.model == false) {
+                    rectState.current = { x, y };
+                    drow_clear();
+                    drawPreviewRect(rectState.start, rectState.current);
+                }else{
+                    x = Number(rectState.start.x) + Number(database_car_data.x);
+                    y = Number(rectState.start.y) - Number(database_car_data.y);
+                    rectState.current = { x, y };
+                    drow_clear();
+                    drawPreviewRect(rectState.start, rectState.current);
+                }
             }
 
             if (draw_function.includes('3')) {
@@ -641,8 +695,14 @@
 
         // 滑鼠按下 → 開始畫
         document.addEventListener("mousedown", (event) => {
-            const rect = canvas.getBoundingClientRect();
+            //控制尺寸的地方 之後修改
+            number_1 = Number(database_car_data.x);
+            number_2 = Number(database_car_data.y);
+            // number_1 = 1;
+            // number_2 = 0;
+            console.log("x:", number_1, "y:", number_2);
 
+            const rect = canvas.getBoundingClientRect();
             const inside =
                 event.clientX >= rect.left &&
                 event.clientX <= rect.right &&
@@ -661,62 +721,77 @@
             drawing = true;
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
-            console.log("功能選擇：", draw_function[0]);
 
-            if (draw_function.includes("1")) {
-                // 找到最近的圓
-                let closestX = null;
-                let closestY = null;
-                let minDist = 50;
+            if(Number(database_car_data.x) == 0 && Number(database_car_data.y) == 0){
+                if (draw_function.includes("1")) {
+                    // 找到最近的圓
+                    let closestX = null;
+                    let closestY = null;
+                    let minDist = 50;
 
-                for (let i = 1; i < 6; i++) {
-                    if (!carData[i]) continue;
+                    for (let i = 1; i < 6; i++) {
+                        if (!carData[i]) continue;
 
-                    const originX = carData[i].x * scale_number_x +100;
-                    const originY = -carData[i].y * scale_number_y +100;
+                        const originX = carData[i].x * scale_number_x +100;
+                        const originY = -carData[i].y * scale_number_y +100;
 
-                    const dist = Math.hypot(x - originX, y - originY);
-                    console.log("距離:", dist)
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closestX = originX;
-                        closestY = originY;
-                        console.log("id:", i);
-                        drawPoints += String(i);
-                        drawing = true;
-                        break;
-                    }else{
-                        drawing = false;
+                        const dist = Math.hypot(x - originX, y - originY);
+                        console.log("距離:", dist)
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestX = originX;
+                            closestY = originY;
+                            console.log("id:", i);
+                            drawPoints += String(i);
+                            drawing = true;
+                            break;
+                        }else{
+                            drawing = false;
+                        }
+                    }
+
+                    // 如果有找到最近的圓，作為起點
+                    if (closestX !== null && closestY !== null && drawing ==true) {
+                        ctx.beginPath();
+                        ctx.moveTo(closestX, closestY);
+
+                        console.log("從最近圓開始畫線: ", closestX, closestY);
                     }
                 }
 
-                // 如果有找到最近的圓，作為起點
-                if (closestX !== null && closestY !== null && drawing ==true) {
-                    ctx.beginPath();
-                    ctx.moveTo(closestX, closestY);
+                if (draw_function.includes("2")) {
+                    x = Math.round(x / 25) * 25;
+                    y = Math.round(y / 25) * 25;
+                    rectState.active = true;
+                    rectState.model = false;
+                    rectState.start = { x, y };
+                    rectState.current = { x, y };
+                }
 
-                    console.log("從最近圓開始畫線: ", closestX, closestY);
+                if (draw_function.includes('3')) {
+                    triState.active = true;
+                    triState.start = { x: x, y: y };
+                    triState.end = { x: x, y: y };
+                }
+
+
+                if (draw_function.includes("5")) {
+                    rectState.active = true;
+                    rectState.start = { x, y };
+                    rectState.current = { x, y };
+                }
+            }else{
+                // console.log("功能選擇成功：");
+                if (draw_function.includes("2")) {
+                    x = Math.round(x / 25) * 25;
+                    y = Math.round(y / 25) * 25;
+                    rectState.active = true;
+                    rectState.model = true;
+                    rectState.start = { x, y };
+                    rectState.current = { x, y };
                 }
             }
-
-            if (draw_function.includes("2")) {
-                rectState.active = true;
-                rectState.start = { x, y };
-                rectState.current = { x, y };
-            }
-
-            if (draw_function.includes('3')) {
-                triState.active = true;
-                triState.start = { x: x, y: y };
-                triState.end = { x: x, y: y };
-            }
-
-
-            if (draw_function.includes("5")) {
-                rectState.active = true;
-                rectState.start = { x, y };
-                rectState.current = { x, y };
-            }
+            
         });
 
         // 放開滑鼠 → 停止畫 + 確認送出
@@ -739,13 +814,21 @@
 
             //紀錄歷史紀錄
             if (drawPoints.length > 0 && draw_function.includes("2")) {
+                rectState.current.x = Math.round(rectState.current.x / 25) * 25;
+                rectState.current.y = Math.round(rectState.current.y / 25) * 25;
                 drawHistory.unshift({
                     type: "rect",
                     data: normalizeRect(rectState.start, rectState.current)
                 });
+                
                 rectState.active = false;
                 const rect = normalizeRect(rectState.start, rectState.current);
                 console.log("功能2完成矩形", rect);
+                console.log("正方形的x: ", rectState.start.x, "正方形的y: ", rectState.current);
+                const width = Math.abs(rectState.current.x - rectState.start.x);
+                const height = Math.abs(rectState.current.y - rectState.start.y);
+                document.getElementById("square_x").value = width;
+                document.getElementById("square_y").value = height;
             }
 
             if (draw_function.includes('3')) {
@@ -1157,9 +1240,32 @@
         }
 
 
+        //設定車子的數據
+        function setValue(btn){
+            const row = btn.parentNode.parentNode; // 找到 tr
+            const x = row.children[1].innerText;   // 第二個 td
+            const y = row.children[2].innerText;   // 第三個 td
+
+            console.log("資料庫x:", x);
+            console.log("資料庫y:", y);
+            database_car_data.x = Number(x);
+            database_car_data.y = Number(y);
+        }
+
+
         //顯示三角形與正方形的歷史資料
         document.getElementById("history_log").addEventListener("click", function () {
             const card = document.getElementById("shape_control_card");
+
+            if (card.style.display === "none") {
+                card.style.display = "block";   // 顯示
+            } else {
+                card.style.display = "none";    // 隱藏
+            }
+        });
+        //顯示設定表單
+        document.getElementById("settings").addEventListener("click", function () {
+            const card = document.getElementById("settings_control_card");
 
             if (card.style.display === "none") {
                 card.style.display = "block";   // 顯示
