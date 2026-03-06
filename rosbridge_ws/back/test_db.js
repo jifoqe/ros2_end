@@ -148,7 +148,7 @@ app.post('/api/create/coordinate_data', (req, res) => {
   // 決定用哪個資料表
   let table = shape === 'square' ? 'draw_square_data' : 'draw_triangle_data';
 
-  const sql = `INSERT INTO ${table} (shape, data, describe, serial_number) VALUES (?, ?, ?, ?)`;
+  const sql = `INSERT INTO \`${table}\` (\`shape\`, \`data\`, \`description\`, serial_number) VALUES (?, ?, ?, ?)`;
 
   connection.query(sql, [shape, JSON.stringify(data), describe, serial_number], (err, result) => {
     if (err) {
@@ -166,10 +166,9 @@ app.post('/api/create/coordinate_data', (req, res) => {
 
 // ===== 2. 載入形狀清單 API =====
 app.get('/api/query/coordinate_data', (req, res) => {
-  const type = req.params.type;  // 'square' 或 'triangle'
-  const table = type === 'square' ? 'draw_square_data' : 'draw_triangle_data';
-
-  const sql = `SELECT shape, data, describe, serial_number FROM ${table} ORDER BY id DESC`;
+  const sql = `SELECT id, shape, data, description, serial_number 
+               FROM draw_square_data 
+               ORDER BY id DESC LIMIT 10`;
 
   connection.query(sql, (err, results) => {
     if (err) {
@@ -179,12 +178,15 @@ app.get('/api/query/coordinate_data', (req, res) => {
 
     // 把 JSON 字串轉回物件
     const shapes = results.map(row => ({
-      ...row,
-      data: JSON.parse(row.data)
+      id: row.id,
+      shape: row.shape,
+      description: row.description,
+      data: JSON.parse(row.data),
+      serial_number: row.serial_number
     }));
 
     console.log(`載入 ${type}: ${shapes.length} 筆`);
-    res.json(shapes);
+    res.json({ success: true, data: shapes });
   });
 });
 

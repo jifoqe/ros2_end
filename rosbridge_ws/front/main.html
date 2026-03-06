@@ -63,7 +63,8 @@
                     <button onclick="drow_clear()">清除</button>
                     <button onclick="draw_last()">上一步</button>
                     <button onclick="draw_next()">下一步</button>
-                    <button onclick=""  id="history_log">歷史紀錄</button>
+                    <button onclick="" id="history_log">歷史紀錄</button>
+                    <!-- <button id="history_log" onclick="toggleHistoryCard()">歷史紀錄</button> -->
                     <button onclick=""  id="settings">設定</button>
                     <br>
                     <br>
@@ -164,12 +165,23 @@
                             <th>date</th>
                             <th>x</th>
                             <th>y</th>
-                            <th>describe</th>
+                            <th>description</th>
                             <th>settings</th>
                         </tr>
                     </thead>
 
+                    <tbody id="historyTbody"> <!-- 加 id -->
+                        <!-- 靜態資料刪除，改動態載入 -->
+                        <tr>
+                            <td colspan="5" style="text-align:center;">點擊「歷史紀錄」按鈕載入</td>
+                        </tr>
+
                     <tbody>
+
+                        <!-- <div style="margin-top:10px;">
+                            <button onclick="loadShapeHistory()" style="padding:8px 16px;">🔄 重新整理歷史</button>
+                        </div> -->
+
                         <tr>
                             <td>3/6</td>
                             <td>100</td>
@@ -220,7 +232,7 @@
 
                     <div class="form-actions">
                         <button type="reset" class="action-btn secondary">重設</button>
-                        <button type="submit" class="action-btn primary">存入資料庫</button>
+                        <button type="button" class="action-btn primary" onclick="saveSquareToDB()">存入資料庫</button>
                     </div>
                 </form>
             </div>
@@ -1353,6 +1365,112 @@
 
             window.location.href = "http://" + ros_ip + ":8000/index.html";
         });
+
+
+
+        // ===== 存正方形到資料庫 =====
+            function saveSquareToDB() {
+                // 檢查有沒有畫正方形
+                if (drawHistory.length === 0 || drawHistory[0].type !== 'rect') {
+                    alert('請先畫正方形 (功能3 → 畫矩形)');
+                    return;
+                }
+
+                const rectData = drawHistory[0].data;
+                const width = document.getElementById("square_x").value;
+                const height = document.getElementById("square_y").value;
+
+                const confirmSave = confirm(`正方形完成！\n\n寬度: ${width}px\n高度: ${height}px\n座標: ${JSON.stringify(rectData).slice(0, 50)}...\n\n是否存入資料庫？`);
+
+                if (!confirmSave) {
+                    console.log('存檔已取消');
+                    return;  // 取消就不存檔
+                }
+
+                fetch(`http://${ros_ip}:3000/api/create/coordinate_data`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shape: 'square',
+                        describe: `${width}x${height}`,
+                        data: rectData,
+                        serial_number: Date.now() % 10000
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('✅ 存檔成功！ID: ' + data.id);
+                        } else {
+                            alert('❌ ' + data.message);
+                        }
+                    })
+                    .catch(err => {
+                        alert('❌ 連線失敗');
+                        console.error('存檔錯誤:', err);
+                    });
+            }
+
+
+            // ===== 載入歷史紀錄到現有表格 =====
+                function loadShapeHistory() {
+
+                    // 根據 radio button 選擇查詢正方形或三角形
+                    const selectedShape = document.querySelector('input[name="shape"]:checked')?.value || 'square';
+                    
+                    fetch(`http://${ros_ip}:3000/api/query/coordinate_data`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const tbody = document.getElementById('historyTbody');
+
+                            if (!data.success || data.data.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">暫無歷史紀錄</td></tr>';
+                                return;
+                            }
+
+                            tbody.innerHTML = data.data.map(item => {
+                                const rect = item.data;
+                                const width = rect.right - rect.left;
+                                const height = rect.bottom - rect.top;
+
+                                return `
+                    <tr>
+                        <td>${new Date().getMonth() + 1}/${new Date().getDate()}</td>
+                        <td>${Math.round(width)}</td>
+                        <td>${Math.round(height)}</td>
+                        <td>${item.description}</td>
+                        <td>
+                            <button onclick="drawFromHistory(${JSON.stringify(item.data)})" style="padding:4px 8px; background:#007bff; color:white; border:none; border-radius:3px;">畫</button>
+                            <button onclick="deleteHistory(${item.id})" style="padding:4px 8px; background:#ff4444; color:white; border:none; border-radius:3px; margin-left:4px;">刪</button>
+                        </td>
+                    </tr>
+                `;
+                            }).join('');
+                        })
+                        .catch(() => {
+                            document.getElementById('historyTbody').innerHTML =
+                                '<tr><td colspan="5" style="text-align:center; color:#f00;">載入失敗</td></tr>';
+                        });
+                }
+
+                // 畫歷史圖形
+                function drawFromHistory(data) {
+                    drow_clear();
+                    ctx.strokeStyle = '#007bff';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(data.left, data.top, data.right - data.left, data.bottom - data.top);
+                    drawHistory.unshift({ type: 'rect', data: data });
+                }
+
+                // 刪除歷史
+                function deleteHistory(id) {
+                    if (confirm('確定刪除？')) {
+                        fetch(`http://${ros_ip}:3000/api/delete/coordinate_data/${id}`, { method: 'DELETE' })
+                            .then(res => res.json())
+                            .then(() => loadShapeHistory());
+                    }
+                }
+
 
     </script>
 </body>

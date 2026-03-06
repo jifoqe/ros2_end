@@ -71,3 +71,24 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+
+CREATE TABLE `draw_square_data` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `shape` VARCHAR(50) DEFAULT 'square',
+  `data` JSON,
+  `description` TEXT,
+  `serial_number` INT UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `draw_triangle_data` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `shape` VARCHAR(50) DEFAULT 'square',
+  `data` JSON,
+  `description` TEXT,
+  `serial_number` INT UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
