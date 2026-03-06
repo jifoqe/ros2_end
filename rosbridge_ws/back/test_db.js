@@ -142,7 +142,7 @@ app.post('/api/register', (req, res) => {
 
 //畫正方形及畫三角形
 // ===== 1. 存形狀 API =====
-app.post('/api/save_shape', (req, res) => {
+app.post('/api/create/coordinate_data', (req, res) => {
   const { shape, describe, data, serial_number } = req.body;
 
   // 決定用哪個資料表
@@ -165,7 +165,7 @@ app.post('/api/save_shape', (req, res) => {
 });
 
 // ===== 2. 載入形狀清單 API =====
-app.get('/api/shapes/:type', (req, res) => {
+app.get('/api/query/coordinate_data', (req, res) => {
   const type = req.params.type;  // 'square' 或 'triangle'
   const table = type === 'square' ? 'draw_square_data' : 'draw_triangle_data';
 
@@ -189,7 +189,7 @@ app.get('/api/shapes/:type', (req, res) => {
 });
 
 // ===== 3. 刪除形狀 API =====
-app.delete('/api/shape/:type/:id', (req, res) => {
+app.delete('/api/delete/coordinate_data', (req, res) => {
   const type = req.params.type;  // 'square' 或 'triangle'
   const id = req.params.id;      // 資料 ID
   const table = type === 'square' ? 'draw_square_data' : 'draw_triangle_data';
