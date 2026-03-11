@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 10, 2025 at 03:31 PM
--- Server version: 8.0.44-0ubuntu0.22.04.1
+-- Generation Time: Mar 11, 2026 at 04:46 PM
+-- Server version: 8.0.44-0ubuntu0.22.04.2
 -- PHP Version: 8.1.2-1ubuntu2.22
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -17,10 +17,8 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
-USE `esp32`;
-
 --
--- Database: `zeabur` (formerly esp32)
+-- Database: `esp32`
 --
 
 -- --------------------------------------------------------
@@ -33,8 +31,7 @@ CREATE TABLE `car_state` (
   `car_number` int NOT NULL COMMENT '車牌編號',
   `line_speed` float NOT NULL COMMENT '直線速度',
   `angle_speed` float NOT NULL COMMENT '角度速度',
-  `local_time` datetime NOT NULL COMMENT '更新時間',
-  PRIMARY KEY (`car_number`)
+  `local_time` datetime NOT NULL COMMENT '更新時間'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='car_base_state(車子基本狀態)';
 
 --
@@ -42,7 +39,7 @@ CREATE TABLE `car_state` (
 --
 
 INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`) VALUES
-(1, 0.5, 0.7, '2025-12-02 09:57:33'),
+(1, 0.5, 0, '2026-03-11 16:45:55'),
 (2, 0.5, 0.7, '2025-12-01 14:51:18'),
 (3, 0.5, 0, '2025-12-01 22:52:37'),
 (4, 2, 1, '2025-12-01 22:06:16'),
@@ -51,13 +48,62 @@ INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `draw_square_data`
+--
+
+CREATE TABLE `draw_square_data` (
+  `id` int NOT NULL,
+  `shape` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'square',
+  `date` json DEFAULT NULL,
+  `description` text COLLATE utf8mb4_general_ci,
+  `serial_number` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='畫正方形資料';
+
+--
+-- Dumping data for table `draw_square_data`
+--
+
+INSERT INTO `draw_square_data` (`id`, `shape`, `date`, `description`, `serial_number`) VALUES
+(1, 'square', '{\"top\": 75, \"left\": 350, \"right\": 575, \"bottom\": 275}', '225x200', 9003),
+(2, 'square', '{\"top\": 75, \"left\": 350, \"right\": 575, \"bottom\": 275}', '225x200', 4723),
+(3, 'square', '{\"top\": 225, \"left\": 225, \"right\": 400, \"bottom\": 350}', '175x125', 5157),
+(4, 'square', '{\"top\": 150, \"left\": 425, \"right\": 450, \"bottom\": 175}', '25x25', 9971),
+(5, 'square', '{\"top\": 175, \"left\": 325, \"right\": 475, \"bottom\": 325}', '150x150', 9561),
+(6, 'square', '{\"top\": 175, \"left\": 225, \"right\": 450, \"bottom\": 375}', '225x200', 4184),
+(7, 'square', '{\"top\": 175, \"left\": 225, \"right\": 425, \"bottom\": 350}', '200x175', 2829),
+(8, 'square', '{\"top\": 200, \"left\": 325, \"right\": 450, \"bottom\": 300}', '125x100', 2486),
+(9, 'square', '{\"top\": 325, \"left\": 150, \"right\": 475, \"bottom\": 450}', '325x125', 2199),
+(10, 'square', '{\"top\": 225, \"left\": 350, \"right\": 525, \"bottom\": 350}', '175x125', 9412),
+(11, 'square', '{\"top\": 175, \"left\": 350, \"right\": 625, \"bottom\": 400}', '300x200', 4467),
+(12, 'square', '{\"top\": 200, \"left\": 375, \"right\": 550, \"bottom\": 400}', '175x200', 935),
+(13, 'square', NULL, '75x50', 9995),
+(14, 'square', NULL, '275x175', 2284),
+(15, 'square', NULL, '400x375', 6882);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `draw_triangle_data`
+--
+
+CREATE TABLE `draw_triangle_data` (
+  `id` int NOT NULL,
+  `shape` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'triangle',
+  `date` json DEFAULT NULL,
+  `description` text COLLATE utf8mb4_general_ci,
+  `serial_number` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='畫三角形資料';
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `user_base`
 --
+
 CREATE TABLE `user_base` (
   `username` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '使用者',
   `password` char(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '密碼',
-  `permissions` enum('1','2','3','4','5','6','7','8','9') NOT NULL COMMENT '權限',
-  PRIMARY KEY (`username`)
+  `permissions` enum('1','2','3','4','5','6','7','8','9') NOT NULL COMMENT '權限'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='使用者基本資料使用者';
 
 --
@@ -66,29 +112,54 @@ CREATE TABLE `user_base` (
 
 INSERT INTO `user_base` (`username`, `password`, `permissions`) VALUES
 ('u', '0', '9');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `car_state`
+--
+ALTER TABLE `car_state`
+  ADD PRIMARY KEY (`car_number`);
+
+--
+-- Indexes for table `draw_square_data`
+--
+ALTER TABLE `draw_square_data`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `serial_number` (`serial_number`);
+
+--
+-- Indexes for table `draw_triangle_data`
+--
+ALTER TABLE `draw_triangle_data`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `serial_number` (`serial_number`);
+
+--
+-- Indexes for table `user_base`
+--
+ALTER TABLE `user_base`
+  ADD PRIMARY KEY (`username`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `draw_square_data`
+--
+ALTER TABLE `draw_square_data`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `draw_triangle_data`
+--
+ALTER TABLE `draw_triangle_data`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
-
-
-CREATE TABLE `draw_square_data` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `shape` VARCHAR(50) DEFAULT 'square',
-  `data` JSON,
-  `description` TEXT,
-  `serial_number` INT UNIQUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-CREATE TABLE `draw_triangle_data` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `shape` VARCHAR(50) DEFAULT 'square',
-  `data` JSON,
-  `description` TEXT,
-  `serial_number` INT UNIQUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-

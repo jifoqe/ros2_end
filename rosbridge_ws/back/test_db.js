@@ -148,7 +148,7 @@ app.post('/api/create/coordinate_data', (req, res) => {
   // 決定用哪個資料表
   let table = shape === 'square' ? 'draw_square_data' : 'draw_triangle_data';
 
-  const sql = `INSERT INTO \`${table}\` (\`shape\`, \`data\`, \`description\`, serial_number) VALUES (?, ?, ?, ?)`;
+  const sql = `INSERT INTO \`${table}\` (\`shape\`, \`date\`, \`description\`, serial_number) VALUES (?, ?, ?, ?)`;
 
   connection.query(sql, [shape, JSON.stringify(data), describe, serial_number], (err, result) => {
     if (err) {

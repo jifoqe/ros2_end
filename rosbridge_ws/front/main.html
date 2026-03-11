@@ -211,7 +211,7 @@
 
             <div class="card basic-control-card"  style="display:none;" id="settings_control_card">
                 <h2>設定</h2>
-                <form id="velocity-form" onsubmit="event.preventDefault(); sendVelocityControl();">
+                <form id="velocity-form" onsubmit="event.preventDefault(); sendVelocityControl(); saveSquareToDB(); return false;">
                     <div class="form-group">
                         <label for="vehicle-select">選擇形狀:</label>
                         <select id="vehicle-select" name="vehicle-select">
@@ -232,7 +232,7 @@
 
                     <div class="form-actions">
                         <button type="reset" class="action-btn secondary">重設</button>
-                        <button type="button" class="action-btn primary" onclick="saveSquareToDB()">存入資料庫</button>
+                        <button type="submit" class="action-btn primary">存入資料庫</button>
                     </div>
                 </form>
             </div>
@@ -832,7 +832,7 @@
                     type: "rect",
                     data: normalizeRect(rectState.start, rectState.current)
                 });
-                
+
                 rectState.active = false;
                 const rect = normalizeRect(rectState.start, rectState.current);
                 console.log("功能2完成矩形", rect);
@@ -841,6 +841,7 @@
                 const height = Math.abs(rectState.current.y - rectState.start.y);
                 document.getElementById("square_x").value = width;
                 document.getElementById("square_y").value = height;
+
             }
 
             if (draw_function.includes('3')) {
@@ -1369,71 +1370,74 @@
 
 
         // ===== 存正方形到資料庫 =====
-            function saveSquareToDB() {
-                // 檢查有沒有畫正方形
-                if (drawHistory.length === 0 || drawHistory[0].type !== 'rect') {
-                    alert('請先畫正方形 (功能3 → 畫矩形)');
-                    return;
-                }
-
-                const rectData = drawHistory[0].data;
-                const width = document.getElementById("square_x").value;
-                const height = document.getElementById("square_y").value;
-
-                const confirmSave = confirm(`正方形完成！\n\n寬度: ${width}px\n高度: ${height}px\n座標: ${JSON.stringify(rectData).slice(0, 50)}...\n\n是否存入資料庫？`);
-
-                if (!confirmSave) {
-                    console.log('存檔已取消');
-                    return;  // 取消就不存檔
-                }
-
-                fetch(`http://${ros_ip}:3000/api/create/coordinate_data`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        shape: 'square',
-                        describe: `${width}x${height}`,
-                        data: rectData,
-                        serial_number: Date.now() % 10000
-                    })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('✅ 存檔成功！ID: ' + data.id);
-                        } else {
-                            alert('❌ ' + data.message);
-                        }
-                    })
-                    .catch(err => {
-                        alert('❌ 連線失敗');
-                        console.error('存檔錯誤:', err);
-                    });
+        function saveSquareToDB() {
+            // 檢查有沒有畫正方形
+            if (drawHistory.length === 0 || drawHistory[0].type !== 'rect') {
+                alert('請先畫正方形 (功能3 → 畫矩形)');
+                return;
             }
 
+            const rectData = drawHistory[0].data;
+            const width = document.getElementById("square_x").value;
+            const height = document.getElementById("square_y").value;
 
-            // ===== 載入歷史紀錄到現有表格 =====
-                function loadShapeHistory() {
+            // 修改這行：顯示寬度、高度、日期(月、日)
+            const today = new Date();
+            const monthDay = `${today.getMonth() + 1}/${today.getDate()}`; 
+             const confirmSave = confirm(`正方形完成！\n\n寬度: ${width}px\n高度: ${height}px\n日期: ${monthDay}\n\n是否存入資料庫？`);
 
-                    // 根據 radio button 選擇查詢正方形或三角形
-                    const selectedShape = document.querySelector('input[name="shape"]:checked')?.value || 'square';
-                    
-                    fetch(`http://${ros_ip}:3000/api/query/coordinate_data`)
-                        .then(res => res.json())
-                        .then(data => {
-                            const tbody = document.getElementById('historyTbody');
+            if (!confirmSave) {
+                console.log('存檔已取消');
+                return;  // 取消就不存檔
+            }
 
-                            if (!data.success || data.data.length === 0) {
-                                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">暫無歷史紀錄</td></tr>';
-                                return;
-                            }
+            fetch(`http://${ros_ip}:3000/api/create/coordinate_data`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    shape: 'square',
+                    describe: `${width}x${height}`,
+                    date: JSON.stringify(rectData),
+                    serial_number: Date.now() % 10000
+                })
+            })
+            .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('存檔成功！ID: ' + data.id);
+                    } else {
+                        alert('❌ ' + data.message);
+                    }
+                })
+                .catch(err => {
+                    alert('連線失敗');
+                    console.error('存檔錯誤:', err);
+                });
+        }
 
-                            tbody.innerHTML = data.data.map(item => {
-                                const rect = item.data;
-                                const width = rect.right - rect.left;
-                                const height = rect.bottom - rect.top;
 
-                                return `
+        // ===== 載入歷史紀錄到現有表格 =====
+        function loadShapeHistory() {
+
+            // 根據 radio button 選擇查詢正方形或三角形
+            const selectedShape = document.querySelector('input[name="shape"]:checked')?.value || 'square';
+
+            fetch(`http://${ros_ip}:3000/api/query/coordinate_data`)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('historyTbody');
+
+                    if (!data.success || data.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">暫無歷史紀錄</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.data.map(item => {
+                        const rect = item.data;
+                        const width = rect.right - rect.left;
+                        const height = rect.bottom - rect.top;
+
+                        return `
                     <tr>
                         <td>${new Date().getMonth() + 1}/${new Date().getDate()}</td>
                         <td>${Math.round(width)}</td>
@@ -1445,31 +1449,31 @@
                         </td>
                     </tr>
                 `;
-                            }).join('');
-                        })
-                        .catch(() => {
-                            document.getElementById('historyTbody').innerHTML =
-                                '<tr><td colspan="5" style="text-align:center; color:#f00;">載入失敗</td></tr>';
-                        });
-                }
+                    }).join('');
+                })
+                .catch(() => {
+                    document.getElementById('historyTbody').innerHTML =
+                        '<tr><td colspan="5" style="text-align:center; color:#f00;">載入失敗</td></tr>';
+            });
+        }
 
-                // 畫歷史圖形
-                function drawFromHistory(data) {
-                    drow_clear();
-                    ctx.strokeStyle = '#007bff';
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(data.left, data.top, data.right - data.left, data.bottom - data.top);
-                    drawHistory.unshift({ type: 'rect', data: data });
-                }
+        // 畫歷史圖形
+        function drawFromHistory(data) {
+                drow_clear();
+                ctx.strokeStyle = '#007bff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(data.left, data.top, data.right - data.left, data.bottom - data.top);
+                drawHistory.unshift({ type: 'rect', data: data });
+        }
 
-                // 刪除歷史
-                function deleteHistory(id) {
-                    if (confirm('確定刪除？')) {
-                        fetch(`http://${ros_ip}:3000/api/delete/coordinate_data/${id}`, { method: 'DELETE' })
-                            .then(res => res.json())
-                            .then(() => loadShapeHistory());
-                    }
-                }
+        // 刪除歷史
+        function deleteHistory(id) {
+            if (confirm('確定刪除？')) {
+                fetch(`http://${ros_ip}:3000/api/delete/coordinate_data/${id}`, { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(() => loadShapeHistory());
+            }
+        }
 
 
     </script>
