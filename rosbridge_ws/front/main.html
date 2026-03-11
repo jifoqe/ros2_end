@@ -1381,10 +1381,10 @@
             const width = document.getElementById("square_x").value;
             const height = document.getElementById("square_y").value;
 
-            // 修改這行：顯示寬度、高度、日期(月、日)
+            // 顯示寬度、高度、日期(月、日)
             const today = new Date();
             const monthDay = `${today.getMonth() + 1}/${today.getDate()}`; 
-             const confirmSave = confirm(`正方形完成！\n\n寬度: ${width}px\n高度: ${height}px\n日期: ${monthDay}\n\n是否存入資料庫？`);
+            const confirmSave = confirm(`正方形完成！\n\n寬度: ${width}px\n高度: ${height}px\n日期: ${monthDay}\n\n是否存入資料庫？`);
 
             if (!confirmSave) {
                 console.log('存檔已取消');
@@ -1397,22 +1397,22 @@
                 body: JSON.stringify({
                     shape: 'square',
                     describe: `${width}x${height}`,
-                    date: JSON.stringify(rectData),
+                    data: rectData,
                     serial_number: Date.now() % 10000
                 })
             })
             .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('存檔成功！ID: ' + data.id);
-                    } else {
-                        alert('❌ ' + data.message);
-                    }
-                })
-                .catch(err => {
-                    alert('連線失敗');
-                    console.error('存檔錯誤:', err);
-                });
+            .then(data => {
+                if (data.success) {
+                    alert('存檔成功！ID: ' + data.id);
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('連線失敗');
+                console.error('存檔錯誤:', err);
+            });
         }
 
 

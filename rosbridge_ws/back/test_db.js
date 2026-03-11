@@ -166,7 +166,7 @@ app.post('/api/create/coordinate_data', (req, res) => {
 
 // ===== 2. 載入形狀清單 API =====
 app.get('/api/query/coordinate_data', (req, res) => {
-  const sql = `SELECT id, shape, data, description, serial_number 
+  const sql = `SELECT id, shape, date, description, serial_number
                FROM draw_square_data 
                ORDER BY id DESC LIMIT 10`;
 
@@ -181,7 +181,7 @@ app.get('/api/query/coordinate_data', (req, res) => {
       id: row.id,
       shape: row.shape,
       description: row.description,
-      data: JSON.parse(row.data),
+      date: JSON.parse(row.data),
       serial_number: row.serial_number
     }));
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 11, 2026 at 04:46 PM
+-- Generation Time: Mar 11, 2026 at 10:11 PM
 -- Server version: 8.0.44-0ubuntu0.22.04.2
 -- PHP Version: 8.1.2-1ubuntu2.22
 
@@ -39,7 +39,7 @@ CREATE TABLE `car_state` (
 --
 
 INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`) VALUES
-(1, 0.5, 0, '2026-03-11 16:45:55'),
+(1, 0.5, 0, '2026-03-11 22:11:38'),
 (2, 0.5, 0.7, '2025-12-01 14:51:18'),
 (3, 0.5, 0, '2025-12-01 22:52:37'),
 (4, 2, 1, '2025-12-01 22:06:16'),
@@ -78,7 +78,20 @@ INSERT INTO `draw_square_data` (`id`, `shape`, `date`, `description`, `serial_nu
 (12, 'square', '{\"top\": 200, \"left\": 375, \"right\": 550, \"bottom\": 400}', '175x200', 935),
 (13, 'square', NULL, '75x50', 9995),
 (14, 'square', NULL, '275x175', 2284),
-(15, 'square', NULL, '400x375', 6882);
+(15, 'square', NULL, '400x375', 6882),
+(16, 'square', NULL, '150x200', 153),
+(17, 'square', NULL, '125x75', 2464),
+(18, 'square', NULL, '175x200', 911),
+(19, 'square', NULL, '125x175', 7047),
+(20, 'square', NULL, '125x150', 4844),
+(21, 'square', NULL, '100x75', 3861),
+(22, 'square', NULL, '75x50', 6017),
+(23, 'square', NULL, '200x100', 5234),
+(24, 'square', '\"{\\\"left\\\":250,\\\"right\\\":475,\\\"top\\\":225,\\\"bottom\\\":325}\"', '225x100', 9922),
+(25, 'square', '\"{\\\"left\\\":75,\\\"right\\\":675,\\\"top\\\":75,\\\"bottom\\\":500}\"', '600x425', 8250),
+(26, 'square', '\"{\\\"left\\\":275,\\\"right\\\":725,\\\"top\\\":225,\\\"bottom\\\":550}\"', '450x325', 5974),
+(27, 'square', '{\"top\": 275, \"left\": 125, \"right\": 300, \"bottom\": 450}', '175x175', 7076),
+(28, 'square', '{\"top\": 25, \"left\": 125, \"right\": 350, \"bottom\": 275}', '225x250', 9587);
 
 -- --------------------------------------------------------
 
@@ -151,7 +164,7 @@ ALTER TABLE `user_base`
 -- AUTO_INCREMENT for table `draw_square_data`
 --
 ALTER TABLE `draw_square_data`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `draw_triangle_data`
