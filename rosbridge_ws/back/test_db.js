@@ -5,6 +5,24 @@
 
 // http://localhost/phpmyadmin/index.php?route=/&route=%2F
 // 建立 MySQL 連線
+
+// ===== 防崩潰處理 =====
+process.on('uncaughtException', (err) => {
+  console.error('❌ 崩潰錯誤:', err.message);
+  console.error('堆疊:', err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ 未處理 Promise:', reason);
+});
+
+// 保持程序運行
+process.on('SIGINT', () => {
+  console.log('收到 Ctrl+C，正常關閉...');
+  process.exit(0);
+});
+
+
 const mysql = require('mysql2');
 const express = require("express");
 const cors = require("cors");
@@ -38,7 +56,7 @@ app.get("/api/data", (req, res) => {
       console.error("查詢失敗:", err);
       return res.status(500).json({ error: err.message });
     }
-    console.log(`資料：${results}`)
+    console.log('資料:', results)
     res.json(results);
   });
 });
@@ -75,7 +93,7 @@ function loadUsers() {
       password: row.password
     }));
 
-    console.log(`資料：${USERS}`)
+    console.log('資料:', results)
   });
 };
 loadUsers();
@@ -181,19 +199,18 @@ app.get('/api/query/coordinate_data', (req, res) => {
       id: row.id,
       shape: row.shape,
       description: row.description,
-      date: JSON.parse(row.data),
+      date: typeof row.date === "string" ? JSON.parse(row.date) : row.date,
       serial_number: row.serial_number
     }));
 
-    console.log(`載入 ${type}: ${shapes.length} 筆`);
+    console.log(`載入 shapes: ${shapes.length} 筆`);
     res.json({ success: true, data: shapes });
   });
 });
 
 // ===== 3. 刪除形狀 API =====
 app.delete('/api/delete/coordinate_data', (req, res) => {
-  const type = req.params.type;  // 'square' 或 'triangle'
-  const id = req.params.id;      // 資料 ID
+  const { type, id } = req.body;
   const table = type === 'square' ? 'draw_square_data' : 'draw_triangle_data';
 
   const sql = `DELETE FROM ${table} WHERE id = ?`;

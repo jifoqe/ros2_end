@@ -151,7 +151,7 @@
 
         <section class="control-panel-section">
 
-            <div class="card basic-control-card" style="display:none;"  id="shape_control_card">
+            <div class="card basic-control-card" style="display:none;"  id="shape_control_card" id="shapecontrolcard">
                 <h2>三角形與正方形</h2>
                 <div>
                     <label><input type="radio" name="shape" value="square"></label>
@@ -171,17 +171,14 @@
                     </thead>
 
                     <tbody id="historyTbody"> <!-- 加 id -->
-                        <!-- 靜態資料刪除，改動態載入 -->
+                    
                         <tr>
-                            <td colspan="5" style="text-align:center;">點擊「歷史紀錄」按鈕載入</td>
+                            <td colspan="5" style="text-align:center;">載入中...</td>
                         </tr>
 
+                    </tbody>
+
                     <tbody>
-
-                        <!-- <div style="margin-top:10px;">
-                            <button onclick="loadShapeHistory()" style="padding:8px 16px;">🔄 重新整理歷史</button>
-                        </div> -->
-
                         <tr>
                             <td>3/6</td>
                             <td>100</td>
@@ -1381,6 +1378,12 @@
             const width = document.getElementById("square_x").value;
             const height = document.getElementById("square_y").value;
 
+            // 驗證輸入
+            if (!width || !height || width <= 0 || height <= 0) {
+                alert('請輸入有效的寬高');
+                return;
+            }
+
             // 顯示寬度、高度、日期(月、日)
             const today = new Date();
             const monthDay = `${today.getMonth() + 1}/${today.getDate()}`; 
@@ -1405,6 +1408,7 @@
             .then(data => {
                 if (data.success) {
                     alert('存檔成功！ID: ' + data.id);
+                    loadShapeHistory();  // 自動刷新歷史表格
                 } else {
                     alert('❌ ' + data.message);
                 }
@@ -1419,6 +1423,12 @@
         // ===== 載入歷史紀錄到現有表格 =====
         function loadShapeHistory() {
 
+            // ✅ 檢查 rosip 是否存在
+            if (typeof ros_ip === 'undefined') {
+                console.error('ros_ip 未定義');
+                return;
+            }
+
             // 根據 radio button 選擇查詢正方形或三角形
             const selectedShape = document.querySelector('input[name="shape"]:checked')?.value || 'square';
 
@@ -1427,6 +1437,12 @@
                 .then(data => {
                     const tbody = document.getElementById('historyTbody');
 
+                    // 檢查元素是否存在
+                    if (!tbody) {
+                        console.error('找不到 historyTbody 元素');
+                        return;
+                    }
+
                     if (!data.success || data.data.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">暫無歷史紀錄</td></tr>';
                         return;
@@ -1434,11 +1450,11 @@
 
                     tbody.innerHTML = data.data.map(item => {
                         const rect = item.data;
-                        const width = rect.right - rect.left;
-                        const height = rect.bottom - rect.top;
-
+                        const x = Math.round(rect.right - rect.left);   // x = 寬度
+                        const y = Math.round(rect.bottom - rect.top);   // y = 高度
                         return `
                     <tr>
+                        <td>${new Date(item.created_at || Date.now()).getMonth() + 1}/${new Date(item.created_at || Date.now()).getDate()}</td>  <!-- ✅ 使用 item.created_at -->
                         <td>${new Date().getMonth() + 1}/${new Date().getDate()}</td>
                         <td>${Math.round(width)}</td>
                         <td>${Math.round(height)}</td>
@@ -1455,6 +1471,17 @@
                     document.getElementById('historyTbody').innerHTML =
                         '<tr><td colspan="5" style="text-align:center; color:#f00;">載入失敗</td></tr>';
             });
+
+           document.getElementById('history_log').addEventListener('click', function () {
+                const card = document.getElementById('shapecontrolcard');
+                card.style.display = card.style.display === 'none' ? 'block' : 'none';
+
+                // 顯示時自動載入最新歷史紀錄
+                if (card.style.display === 'block') {
+                    loadShapeHistory();  // 自動刷新
+                }
+            });
+
         }
 
         // 畫歷史圖形
@@ -1467,13 +1494,23 @@
         }
 
         // 刪除歷史
-        function deleteHistory(id) {
-            if (confirm('確定刪除？')) {
-                fetch(`http://${ros_ip}:3000/api/delete/coordinate_data/${id}`, { method: 'DELETE' })
-                    .then(res => res.json())
-                    .then(() => loadShapeHistory());
+        function deleteHistory(id, type) {
+                if (confirm('確定刪除？')) {
+
+                    fetch(`http://${ros_ip}:3000/api/delete/coordinate_data`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: id,
+                            type: type
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(() => loadShapeHistory());
+                }
             }
-        }
 
 
     </script>
