@@ -6,33 +6,39 @@
 #include <unistd.h>
 #include <cstring>
 #include <string>
+#include <vector>
+
+struct ClientInfo {
+    std::string ip;
+    int port;
+    sockaddr_in addr;
+};
 
 class UdpServerNode : public rclcpp::Node
 {
 public:
     UdpServerNode() : Node("udp_server_node")
     {
+        // Publisher 發訊息給 Web
         publisher_ = this->create_publisher<std_msgs::msg::String>("/web_output", 10);
-        // 每秒定時傳訊息給 web
+
+        // 每秒定時傳訊息給 Web
         timer_ = this->create_wall_timer(
             std::chrono::seconds(1),
             [this]() {
                 std_msgs::msg::String msg;
                 msg.data = "1"; //完成
-                // msg.data = "2"; //執行中
-                // msg.data = "3"; //狀況
                 publisher_->publish(msg);
                 RCLCPP_INFO(this->get_logger(), "已傳送給 web: %s", msg.data.c_str());
             }
         );
-        // esp32_date.data = "Hello from C++ node!";
-        // publisher_->publish(esp32_date);
 
+        // 訂閱 Web 訊息
         subscription_ = this->create_subscription<std_msgs::msg::String>(
             "/web_ros_date", 10,
             [this](std_msgs::msg::String::SharedPtr msg) {
-                web_date = msg->data;   // string
-                RCLCPP_INFO(this->get_logger(), "收到: '%s'", web_date.c_str());
+                web_date = msg->data;
+                RCLCPP_INFO(this->get_logger(), "收到 Web 指令: '%s'", web_date.c_str());
             }
         );
 
@@ -58,18 +64,27 @@ public:
 
         RCLCPP_INFO(this->get_logger(), "Server listening on port %d", server_port_);
 
-        // 設定 ESP32 IP & port
-        client_addr_.sin_family = AF_INET;
-        client_addr_.sin_port = htons(client_port_);
-        inet_pton(AF_INET, client_ip_.c_str(), &client_addr_.sin_addr);
+        // 初始化 4 台 ESP32 客戶端資訊
+        clients = {
+            {"10.46.204.201", 8888, {}},
+            {"10.46.204.202", 8888, {}},
+            {"10.46.204.203", 8888, {}},
+            {"10.46.204.204", 8888, {}}
+        };
 
-        // 建立定時器：每 1 秒發送數字
+        for(auto &c : clients){
+            c.addr.sin_family = AF_INET;
+            c.addr.sin_port = htons(c.port);
+            inet_pton(AF_INET, c.ip.c_str(), &c.addr.sin_addr);
+        }
+
+        // 建立定時器：每 1 秒發送訊息給所有 ESP32
         send_timer_ = this->create_wall_timer(
             std::chrono::seconds(1),
             std::bind(&UdpServerNode::send_numbers, this)
         );
 
-        // 建立定時器：每 100ms 嘗試接收資料
+        // 建立定時器：每 100ms 嘗試接收 ESP32 發送的資料
         recv_timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100),
             std::bind(&UdpServerNode::receive_data, this)
@@ -83,14 +98,14 @@ public:
 private:
     void send_numbers()
     {
-        if(web_date!="0"){
+        if(web_date != "0") {
             std::string msg = web_date;
-            sendto(sockfd_, msg.c_str(), msg.size(), 0,
-                (struct sockaddr*)&client_addr_, sizeof(client_addr_));
+            for(auto &c : clients){
+                sendto(sockfd_, msg.c_str(), msg.size(), 0, (struct sockaddr*)&c.addr, sizeof(c.addr));
+                RCLCPP_INFO(this->get_logger(), "Sent to %s:%d -> %s", c.ip.c_str(), c.port, msg.c_str());
+            }
             web_date = "0";
-            RCLCPP_INFO(this->get_logger(), "Sent: %s", msg.c_str());
         }
-
     }
 
     void receive_data()
@@ -104,19 +119,18 @@ private:
 
         if (n > 0) {
             buffer[n] = '\0';
+            char ip[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &sender_addr.sin_addr, ip, INET_ADDRSTRLEN);
+            int port = ntohs(sender_addr.sin_port);
             std::string data(buffer);
-            RCLCPP_INFO(this->get_logger(), "Received from ESP32: %s", data.c_str());
+            RCLCPP_INFO(this->get_logger(),"Received from %s:%d -> %s", ip, port, data.c_str());
         }
     }
 
     int sockfd_;
-    int server_port_ = 8888;        // 本機 port
-    std::string client_ip_ = "192.168.1.100"; // ESP32 IP，請改成實際 IP
-    int client_port_ = 8888;        // ESP32 接收 port
-    sockaddr_in client_addr_;
-
-    std::string web_date = "0";
-    std_msgs::msg::String esp32_date;
+    int server_port_ = 8888;  // 本機 UDP port
+    std::vector<ClientInfo> clients; // 多台 ESP32
+    std::string web_date = "0";//發送給esp32的資料
 
     rclcpp::TimerBase::SharedPtr send_timer_;
     rclcpp::TimerBase::SharedPtr recv_timer_;

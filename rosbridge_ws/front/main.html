@@ -916,6 +916,11 @@
         }
 
         function sendDrawDataToROS(points) {
+            // 先檢查 points 是否為空
+            if (points === "") {
+                // console.log("沒有資料，跳過傳送");
+                return; // 沒資料就直接結束
+            }
             function_three_data.innerHTML=points;
             const msg = new ROSLIB.Message({
                 data: points

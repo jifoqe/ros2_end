@@ -61,26 +61,26 @@ ament_target_dependencies(image_subscriber
   visualization_msgs
 )
 
-install(
-  PROGRAMS
-    launch/machine_learning.py   # ← 路徑要正確，假設你的檔案放在 esp32_receiver/scripts 下
-  DESTINATION lib/${PROJECT_NAME}
-)
-install(
-  PROGRAMS
-    launch/machine_learning_two.py   # ← 路徑要正確，假設你的檔案放在 esp32_receiver/scripts 下
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(
+#   PROGRAMS
+#     launch/machine_learning.py   # ← 路徑要正確，假設你的檔案放在 esp32_receiver/scripts 下
+#   DESTINATION lib/${PROJECT_NAME}
+# )
+# install(
+#   PROGRAMS
+#     launch/machine_learning_two.py   # ← 路徑要正確，假設你的檔案放在 esp32_receiver/scripts 下
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 install(
   PROGRAMS
     launch/gazebo_image.py   # ← 確認你的腳本路徑正確
   DESTINATION lib/${PROJECT_NAME}
 )
-install(
-  PROGRAMS
-    launch/open_pkl.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(
+#   PROGRAMS
+#     launch/open_pkl.py
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 install(TARGETS
   image_subscriber
