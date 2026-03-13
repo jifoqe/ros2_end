@@ -108,7 +108,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY description launch woilds config
+  DIRECTORY description launch woilds config urdf_data
   DESTINATION share/${PROJECT_NAME}
 )
 
