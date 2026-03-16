@@ -63,6 +63,7 @@
                     <button onclick="drow_clear()">清除</button>
                     <button onclick="draw_last()">上一步</button>
                     <button onclick="draw_next()">下一步</button>
+                    <button onclick="draw_init()">初始畫</button>
                     <button onclick="" id="history_log">歷史紀錄</button>
                     <!-- <button id="history_log" onclick="toggleHistoryCard()">歷史紀錄</button> -->
                     <button onclick=""  id="settings">設定</button>
@@ -113,6 +114,7 @@
             const div = document.createElement("div");
             const localId = `local-pos-${machine.car_number}`;
             const targetId = `target-pos-${machine.car_number}`;
+            const state = `status-${machine.car_number}`;
 
             div.innerHTML = `
                 <p>機台 ${machine.car_number}</p>
@@ -123,11 +125,11 @@
                 <p>角速度：</p>
                 <p>${machine.angle_speed} m/s</p>
                 <p>當前位置：</p>
-                <p id="${localId}">(11,-02,60)</p>
+                <p id="${localId}">(11,-02,0)</p>
                 <p>目標位置：</p>
                 <p id="${targetId}" onclick="editTarget('${targetId}')"> 設定目標 </p>
                 <p>狀態：</p>
-                <p> 無資料 </p>
+                <p id="${state}"> 無資料 </p>
                 <div class="machine-actions-group">
                     <button class="action-btn primary" onclick="startMoving(${machine.car_number}, '${localId}', '${targetId}')">出發</button>
                     <button class="action-btn danger" onclick="emergencyStop(${machine.car_number})">緊急停止</button>
@@ -276,8 +278,8 @@
                     <button class="action-btn tertiary up" onclick="send_direction('1')">⬆️ 前 (Front)</button>
                     <button class="action-btn tertiary left" onclick="send_direction('3')">⬅️ 左轉 (Lift)</button>
                     <button class="action-btn tertiary rotate-ccw" onclick="send_direction('6')">⟲ 逆時針 (CCW)</button>
-                    <button class="action-btn danger stop" onclick="send_direction('5')">🛑 停 (Stop)</button>
-                    <button class="action-btn tertiary rotate-cw" onclick="send_direction('7')">⟳ 順時針 (CW)</button>
+                    <button class="action-btn danger stop" onclick="send_direction('7')">🛑 停 (Stop)</button>
+                    <button class="action-btn tertiary rotate-cw" onclick="send_direction('5')">⟳ 順時針 (CW)</button>
                     <button class="action-btn tertiary right" onclick="send_direction('4')">➡️ 右轉 (Right)</button>
                     <button class="action-btn tertiary down" onclick="send_direction('2')">⬇️ 後 (Back)</button>
                 </div>
@@ -424,12 +426,28 @@
             if (outputDiv) {
                 outputDiv.innerText = msg.data;
             }
+            const car_function = msg.data[0];//功能
+            const car_number = msg.data[1];//車號
+            const car_state = msg.data[2];
 
-            if(msg.data == "1"){
-                drawPoints = document.getElementById("function_three_data").innerHTML;
-                drawPoints = drawPoints.slice(0, 2) + drawPoints.slice(10);
-                // console.log("drawPoints 目前:", drawPoints);
-                sendDrawDataToROS(drawPoints);
+            //初始化
+            if(car_function == "1"){
+                if(car_state == 5){
+                    state.innerText = "撞機了";
+                    return;
+                }
+                
+                const state = document.getElementById(`status-${car_number}`);
+                const localId = document.getElementById(`local-pos-${car_number}`);
+                const local_angle = localId.innerText.slice(1,-1).split(",")[2];
+
+                if(local_angle != "0"){
+                    draw_init();
+                    state.innerText = "初始畫中...";
+                }else if(local_angle == "0"){
+                    console.log("state.innerText:", state.innerText);
+                    state.innerText = "完成初始畫";
+                }
             }
         });
         let carData = {};
@@ -519,7 +537,7 @@
         function editTarget(id) {
             const target = document.getElementById(id);
 
-            let value = prompt("請輸入新的目標位置格式：x,y：", target.innerText.trim());
+            let value = prompt("請輸入新的目標位置格式：x,y,angle：", target.innerText.trim());
 
             // 使用者按取消
             if (value === null) return;
@@ -1064,33 +1082,32 @@
                 right: Math.max(p1.x, p2.x),
                 top: Math.min(p1.y, p2.y),
                 bottom: Math.max(p1.y, p2.y)
-            };
-                
-            }
+            };   
+        }
 
         function drawPreviewTri(p1, p2) {  // p1=start(頂點), p2=end(底邊右頂點)
-                ctx.strokeStyle = 'orange';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 4]);   // 虛線橘色
-                ctx.beginPath();
-                ctx.moveTo(p1.x, p1.y);           // 頂點
-                ctx.lineTo(p2.x, p2.y);           // 底邊右頂點
-                //三角形
-                // 計算底邊左頂點（與頂點中點垂直，等長）
-                const midX = (p1.x + p2.x) / 2;
-                const midY = (p1.y + p2.y) / 2;
-                const dx = p2.x - p1.x;
-                const dy = p2.y - p1.y;
-                const perpX = -dy;  // 垂直向量
-                const perpY = dx;
-                const len = Math.sqrt(perpX * perpX + perpY * perpY);
-                const leftX = midX - perpX / len * 80;  // 底邊左頂點（寬度40px）
-                const leftY = midY - perpY / len * 80;
-                ctx.lineTo(leftX, leftY);
-                ctx.closePath();
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
+            ctx.strokeStyle = 'orange';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);   // 虛線橘色
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);           // 頂點
+            ctx.lineTo(p2.x, p2.y);           // 底邊右頂點
+            //三角形
+            // 計算底邊左頂點（與頂點中點垂直，等長）
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const perpX = -dy;  // 垂直向量
+            const perpY = dx;
+            const len = Math.sqrt(perpX * perpX + perpY * perpY);
+            const leftX = midX - perpX / len * 80;  // 底邊左頂點（寬度40px）
+            const leftY = midY - perpY / len * 80;
+            ctx.lineTo(leftX, leftY);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
 
 
         // function drawTri(triData) {
@@ -1241,7 +1258,7 @@
                     const dy = p2.y - p1.y;
                     const perpX = -dy;
                     const perpY = dx;
-                    const len = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+                    const len = Math.sqrt(perpX * perpX + perpY * perpY)|| 1;
                     const leftX = midX - perpX / len * 80;  // 跟預覽一樣的8px
                     const leftY = midY - perpY / len * 80;
 
@@ -1371,6 +1388,13 @@
         });
 
 
+        /* ========================================= */
+        /* IV 初始畫車子 */
+        /* ========================================= */
+        function draw_init() {
+            const msg = new ROSLIB.Message({ data: String(123) });
+            pub.publish(msg);
+        }
 
         // ===== 存正方形到資料庫 =====
         function saveSquareToDB() {

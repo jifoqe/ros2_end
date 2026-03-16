@@ -27,7 +27,7 @@ public:
             std::chrono::seconds(1),
             [this]() {
                 std_msgs::msg::String msg;
-                msg.data = "1"; //完成
+                msg.data = "131"; //完成
                 publisher_->publish(msg);
                 RCLCPP_INFO(this->get_logger(), "已傳送給 web: %s", msg.data.c_str());
             }
