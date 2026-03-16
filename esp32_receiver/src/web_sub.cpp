@@ -31,14 +31,21 @@ private:
     {
         //2 1 0110 0230 0340 0250 0340 0250
         // 資料太短直接回傳錯誤
-        if (web_data.size() <= 10) {
-            return web_data;
-        }
+        // if (web_data.size() <= 10) {
+        //     return web_data;
+        // }
 
         // 功能
         char func = web_data[0];
         if (func == '1') {
-            return "FUNC1_NO_ACTION";
+            // return "FUNC1_NO_ACTION";
+            std::string esp32_date = "";
+            for (size_t i = 1; i < web_data.size(); i++) {
+                esp32_date.push_back(web_data[i]);
+            }
+            // esp32_date.push_back(web_data[1]);  // 功能
+            // esp32_date.push_back(web_data[2]);  // 車號
+            return esp32_date;
         }
 
         if (func == '2') {
