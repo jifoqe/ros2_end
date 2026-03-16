@@ -5,12 +5,12 @@ const char* ssid = "realme GT NEO 3";
 const char* pass = "00000000";
 
 WiFiUDP udp;
-const char* host = "10.46.204.122"; // ROS2 server IP
+const char* host = "10.223.244.122"; // ROS2 server IP
 const int port = 8888;               // ROS2 server port
 
 // ⭐ ESP32 固定 IP
-IPAddress local_IP(10, 46, 204, 201);
-IPAddress gateway(10, 46, 204, 1);
+IPAddress local_IP(10, 223, 244, 202);
+IPAddress gateway(10, 223, 244, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 void setup() {
@@ -40,7 +40,7 @@ void setup() {
 
 void loop() {
   // 1️⃣ 傳送 1~10
-  for (int i = 1; i <= 10; i++) {
+  for (int i = 11; i <= 20; i++) {
     udp.beginPacket(host, port);
     udp.print(i);
     udp.endPacket();

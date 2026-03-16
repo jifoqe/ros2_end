@@ -13,7 +13,7 @@
     <visual>
       <origin xyz="-0.0704542 0.0588226 -0.0389117" rpy="-1.5708 -0 -0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
       <material name="mc520电机模型1024线_material">
         <color rgba="1 1 1 1"/>
@@ -22,14 +22,14 @@
     <collision>
       <origin xyz="-0.0704542 0.0588226 -0.0389117" rpy="-1.5708 -0 -0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
     </collision>
     <!-- Part part_1 -->
     <visual>
       <origin xyz="-0.0111542 0.00382259 -0.0119117" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1.stl"/>
       </geometry>
       <material name="part_1_material">
         <color rgba="0.615686 0.811765 0.929412 1"/>
@@ -38,14 +38,14 @@
     <collision>
       <origin xyz="-0.0111542 0.00382259 -0.0119117" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1.stl"/>
       </geometry>
     </collision>
     <!-- Part mg513µç_úö_¼ü -->
     <visual>
       <origin xyz="-0.0509542 -0.0511774 -0.0119117" rpy="3.14159 -0 -1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
       <material name="mg513µç_úö_¼ü_material">
         <color rgba="0.745098 0.901961 0.960784 1"/>
@@ -54,14 +54,14 @@
     <collision>
       <origin xyz="-0.0509542 -0.0511774 -0.0119117" rpy="3.14159 -0 -1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
     </collision>
     <!-- Part mg513µç_úö_¼ü_2 -->
     <visual>
       <origin xyz="0.0286458 0.0588226 -0.0119117" rpy="3.14159 -0 1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
       <material name="mg513µç_úö_¼ü_2_material">
         <color rgba="0.745098 0.901961 0.960784 1"/>
@@ -70,14 +70,14 @@
     <collision>
       <origin xyz="0.0286458 0.0588226 -0.0119117" rpy="3.14159 -0 1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
     </collision>
     <!-- Part mg513µç_úö_¼ü_3 -->
     <visual>
       <origin xyz="-0.0509542 0.0588226 -0.0119117" rpy="3.14159 -0 -1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
       <material name="mg513µç_úö_¼ü_3_material">
         <color rgba="0.745098 0.901961 0.960784 1"/>
@@ -86,14 +86,14 @@
     <collision>
       <origin xyz="-0.0509542 0.0588226 -0.0119117" rpy="3.14159 -0 -1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
     </collision>
     <!-- Part mc520电机模型1024线_2 -->
     <visual>
       <origin xyz="-0.0704542 -0.0511774 -0.0389117" rpy="-1.5708 -0 -0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
       <material name="mc520电机模型1024线_2_material">
         <color rgba="1 1 1 1"/>
@@ -102,14 +102,14 @@
     <collision>
       <origin xyz="-0.0704542 -0.0511774 -0.0389117" rpy="-1.5708 -0 -0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
     </collision>
     <!-- Part mc520电机模型1024线_3 -->
     <visual>
       <origin xyz="0.0481458 0.0588226 -0.0389117" rpy="-1.5708 -0 3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
       <material name="mc520电机模型1024线_3_material">
         <color rgba="1 1 1 1"/>
@@ -118,14 +118,14 @@
     <collision>
       <origin xyz="0.0481458 0.0588226 -0.0389117" rpy="-1.5708 -0 3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
     </collision>
     <!-- Part mc520电机模型1024线_4 -->
     <visual>
       <origin xyz="0.0481458 -0.0511774 -0.0389117" rpy="-1.5708 -0 3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
       <material name="mc520电机模型1024线_4_material">
         <color rgba="1 1 1 1"/>
@@ -134,14 +134,14 @@
     <collision>
       <origin xyz="0.0481458 -0.0511774 -0.0389117" rpy="-1.5708 -0 3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mc520电机模型1024线.stl"/>
       </geometry>
     </collision>
     <!-- Part mg513µç_úö_¼ü_4 -->
     <visual>
       <origin xyz="0.0286458 -0.0511774 -0.0119117" rpy="3.14159 -0 1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
       <material name="mg513µç_úö_¼ü_4_material">
         <color rgba="0.745098 0.901961 0.960784 1"/>
@@ -150,7 +150,7 @@
     <collision>
       <origin xyz="0.0286458 -0.0511774 -0.0119117" rpy="3.14159 -0 1.5708"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/mg513µç_úö_¼ü.stl"/>
       </geometry>
     </collision>
   </link>
@@ -165,7 +165,7 @@
     <visual>
       <origin xyz="-0 -0 -0.013" rpy="1.5708 -0 3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
       <material name="part_1_2_material">
         <color rgba="0.615686 0.811765 0.929412 1"/>
@@ -174,7 +174,7 @@
     <collision>
       <origin xyz="-0 -0 -0.013" rpy="1.5708 -0 3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
     </collision>
   </link>
@@ -197,7 +197,7 @@
     <visual>
       <origin xyz="0 -0 -0.013" rpy="1.5708 -0 -3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
       <material name="part_1_3_material">
         <color rgba="0.615686 0.811765 0.929412 1"/>
@@ -206,7 +206,7 @@
     <collision>
       <origin xyz="0 -0 -0.013" rpy="1.5708 -0 -3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
     </collision>
   </link>
@@ -229,7 +229,7 @@
     <visual>
       <origin xyz="0 0 -0.013" rpy="1.5708 -0 -3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
       <material name="part_1_4_material">
         <color rgba="0.615686 0.811765 0.929412 1"/>
@@ -238,7 +238,7 @@
     <collision>
       <origin xyz="0 0 -0.013" rpy="1.5708 -0 -3.14159"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
     </collision>
   </link>
@@ -261,7 +261,7 @@
     <visual>
       <origin xyz="0 0 -0.013" rpy="1.5708 -0 0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
       <material name="part_1_5_material">
         <color rgba="0.615686 0.811765 0.929412 1"/>
@@ -270,7 +270,7 @@
     <collision>
       <origin xyz="0 0 -0.013" rpy="1.5708 -0 0"/>
       <geometry>
-        <mesh filename="package://esp32_receiver/urdf_data/assets/part_1__2.stl"/>
+        <mesh filename="/home/u/ros2_ws/src/ros2_end/esp32_receiver/urdf_data/assets/part_1__2.stl"/>
       </geometry>
     </collision>
   </link>
