@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ROS2 遠端控制介面</title>
   <link rel="stylesheet" href="main.css"> 
-   <script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>    
+<script src="https://cdn.jsdelivr.net/npm/roslib@1.0.1/build/roslib.min.js"></script>
 </head>
 <body>
     <script>
@@ -153,7 +153,7 @@
 
         <section class="control-panel-section">
 
-            <div class="card basic-control-card" style="display:none;"  id="shape_control_card" id="shapecontrolcard">
+            <div class="card basic-control-card" id="shape_control_card" id="shapecontrolcard">
                 <h2>三角形與正方形</h2>
                 <div>
                     <label><input type="radio" name="shape" value="square"></label>
@@ -1500,8 +1500,8 @@
                         data.data.forEach(function (item) {
                             // 解析尺寸：'450x200' → x=450, y=200
                             const match = item.description.match(/(\d+)x(\d+)/);
-                            const x = match ? parseInt(match[1]) : 0;
-                            const y = match ? parseInt(match[2]) : 0;
+                            const hx = match ? parseInt(match[1]) : 0;
+                            const hy = match ? parseInt(match[2]) : 0;
 
                             // 用安全的日期格式化
                             const monthDay = formatDate(item.date);
@@ -1510,15 +1510,10 @@
                             const row = tbody.insertRow();
                             row.innerHTML = `
                               <td>${monthDay}</td>
-                              <td>${x}</td>
-                              <td>${y}</td>
-                              <td>${item.description} (${item.shape || 'square'})</td>
-    
-                              <td>
-                              <button onclick="setValueFromHistory(${x},${y})" 
-                              style="padding:4px 8px;background:#007bff;color:white;border:none;border-radius:3px;font-size:12px;">設定</button>
-                            <button onclick="deleteHistory(${item.id})" style="...">刪</button>
-                              </td>
+                              <td>${hx}</td>
+                              <td>${hy}</td>
+                              <td>${item.description}</td>
+                              <td><button onclick="setValueFromHistory(this)">設定</button></td>
                             `;
 
                         });
@@ -1529,37 +1524,53 @@
                         console.error('錯誤:', err);
                         tbody.innerHTML = '<tr><td colspan="5" style="color:#f00;">載入失敗</td></tr>';
                     });
+        }
+
+        // 自動載入
+        window.addEventListener('load', function () {
+            // 延遲1秒載入，避免其他初始化衝突
+            setTimeout(function () {
+                loadShapeHistory();
+            }, 1000);
+        });
+
+
+        function setValueFromHistory(button) {
+
+            // 從按鈕往上找第2個 <td>（x 值）和第3個 <td>（y 值）
+            const row = button.closest('tr');
+            const cells = row.querySelectorAll('td');
+            const hx = parseInt(cells[1].textContent);
+            const hy = parseInt(cells[2].textContent);
+
+            // 確保全域變數存在
+            if (typeof database_car_data === 'undefined') {
+                database_car_data = {};
             }
+            database_car_data.x = hx;
+            database_car_data.y = hy;
 
-            function setValueFromHistory(x, y) {
-                // 確保全域變數存在
-                if (typeof database_car_data === 'undefined') {
-                    database_car_data = {};
-                }
-                database_car_data.x = x;
-                database_car_data.y = y;
+            // 填入表單
+            const xInput = document.getElementById('square_x');
+            const yInput = document.getElementById('square_y');
+            if (xInput) xInput.value = hx;
+            if (yInput) yInput.value = hy;
 
-                // 填入表單
-                const xInput = document.getElementById('square_x');
-                const yInput = document.getElementById('square_y');
-                if (xInput) xInput.value = x;
-                if (yInput) yInput.value = y;
+            alert('已設定 x=' + hx + ', y=' + hy);
+        }
 
-                alert('已設定 x=' + x + ', y=' + y);
-            }
+        function deleteHistory(id) {
+            if (!confirm('確定刪除？')) return;
 
-            function deleteHistory(id) {
-                if (!confirm('確定刪除？')) return;
-
-                fetch(`http://${ros_ip}:3000/api/delete/coordinate_data`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
-                })
-                    .then(res => res.json())
-                    .then(() => loadShapeHistory())
-                    .catch(err => alert('刪除失敗: ' + err));
-            }
+            fetch(`http://${ros_ip}:3000/api/delete/coordinate_data`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            })
+                .then(res => res.json())
+                .then(() => loadShapeHistory())
+                .catch(err => alert('刪除失敗: ' + err));
+        }
 
 
 

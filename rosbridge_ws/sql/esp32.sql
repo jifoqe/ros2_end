@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 11, 2026 at 10:11 PM
+-- Generation Time: Mar 17, 2026 at 10:31 PM
 -- Server version: 8.0.44-0ubuntu0.22.04.2
 -- PHP Version: 8.1.2-1ubuntu2.22
 
@@ -39,7 +39,7 @@ CREATE TABLE `car_state` (
 --
 
 INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`) VALUES
-(1, 0.5, 0, '2026-03-11 22:11:38'),
+(1, 0.5, 0, '2026-03-17 21:37:43'),
 (2, 0.5, 0.7, '2025-12-01 14:51:18'),
 (3, 0.5, 0, '2025-12-01 22:52:37'),
 (4, 2, 1, '2025-12-01 22:06:16'),
@@ -91,7 +91,47 @@ INSERT INTO `draw_square_data` (`id`, `shape`, `date`, `description`, `serial_nu
 (25, 'square', '\"{\\\"left\\\":75,\\\"right\\\":675,\\\"top\\\":75,\\\"bottom\\\":500}\"', '600x425', 8250),
 (26, 'square', '\"{\\\"left\\\":275,\\\"right\\\":725,\\\"top\\\":225,\\\"bottom\\\":550}\"', '450x325', 5974),
 (27, 'square', '{\"top\": 275, \"left\": 125, \"right\": 300, \"bottom\": 450}', '175x175', 7076),
-(28, 'square', '{\"top\": 25, \"left\": 125, \"right\": 350, \"bottom\": 275}', '225x250', 9587);
+(28, 'square', '{\"top\": 25, \"left\": 125, \"right\": 350, \"bottom\": 275}', '225x250', 9587),
+(29, 'square', '{\"top\": 225, \"left\": 125, \"right\": 350, \"bottom\": 350}', '225x125', 224),
+(30, 'square', '{\"top\": 75, \"left\": 125, \"right\": 425, \"bottom\": 350}', '300x275', 6354),
+(31, 'square', '{\"top\": 275, \"left\": 100, \"right\": 400, \"bottom\": 525}', '300x250', 6066),
+(32, 'square', '{\"top\": 150, \"left\": 175, \"right\": 400, \"bottom\": 325}', '225x175', 6606),
+(33, 'square', '{\"top\": 250, \"left\": 125, \"right\": 425, \"bottom\": 450}', '300x200', 2012),
+(34, 'square', '{\"top\": 325, \"left\": 275, \"right\": 500, \"bottom\": 550}', '225x225', 8235),
+(35, 'square', '{\"top\": 300, \"left\": 175, \"right\": 550, \"bottom\": 550}', '375x250', 4351),
+(36, 'square', '{\"top\": 225, \"left\": 275, \"right\": 600, \"bottom\": 375}', '325x150', 4021),
+(37, 'square', '{\"top\": 50, \"left\": 150, \"right\": 475, \"bottom\": 300}', '325x250', 9280),
+(38, 'square', '{\"top\": 150, \"left\": 275, \"right\": 625, \"bottom\": 375}', '350x225', 990),
+(39, 'square', '{\"top\": 225, \"left\": 225, \"right\": 450, \"bottom\": 450}', '225x225', 4189),
+(40, 'square', '{\"top\": 275, \"left\": 200, \"right\": 400, \"bottom\": 450}', '200x175', 8944),
+(41, 'square', '{\"top\": 225, \"left\": 225, \"right\": 425, \"bottom\": 425}', '200x200', 8786),
+(42, 'square', '{\"top\": 100, \"left\": 200, \"right\": 475, \"bottom\": 375}', '275x275', 5286),
+(43, 'square', '{\"top\": 350, \"left\": 225, \"right\": 375, \"bottom\": 475}', '150x125', 5836),
+(44, 'square', '{\"top\": 225, \"left\": 300, \"right\": 550, \"bottom\": 425}', '250x200', 4431),
+(45, 'square', '{\"top\": 350, \"left\": 275, \"right\": 525, \"bottom\": 550}', '250x200', 7067),
+(46, 'square', '{\"top\": 125, \"left\": 225, \"right\": 525, \"bottom\": 400}', '300x275', 9059),
+(47, 'square', '{\"top\": 125, \"left\": 375, \"right\": 575, \"bottom\": 350}', '200x225', 6909),
+(48, 'square', '{\"top\": 225, \"left\": 275, \"right\": 525, \"bottom\": 425}', '250x200', 88),
+(49, 'square', '{\"top\": 225, \"left\": 150, \"right\": 325, \"bottom\": 375}', '175x150', 1188),
+(50, 'square', '{\"top\": 175, \"left\": 250, \"right\": 525, \"bottom\": 375}', '275x200', 2170),
+(51, 'square', '{\"top\": 350, \"left\": 200, \"right\": 650, \"bottom\": 550}', '450x200', 640),
+(52, 'square', '{\"top\": 350, \"left\": 225, \"right\": 450, \"bottom\": 475}', '225x125', 2811),
+(53, 'square', '{\"top\": 225, \"left\": 225, \"right\": 550, \"bottom\": 400}', '325x175', 5292),
+(54, 'square', '{\"top\": 200, \"left\": 250, \"right\": 525, \"bottom\": 475}', '275x275', 3447),
+(55, 'square', '{\"top\": 300, \"left\": 275, \"right\": 475, \"bottom\": 500}', '200x200', 4799),
+(56, 'square', '{\"top\": 175, \"left\": 250, \"right\": 625, \"bottom\": 500}', '375x325', 5766),
+(57, 'square', '{\"top\": 375, \"left\": 150, \"right\": 400, \"bottom\": 550}', '250x175', 3550),
+(58, 'square', '{\"top\": 400, \"left\": 100, \"right\": 350, \"bottom\": 550}', '250x150', 5576),
+(59, 'square', '{\"top\": 350, \"left\": 250, \"right\": 425, \"bottom\": 525}', '175x175', 1385),
+(60, 'square', '{\"top\": 300, \"left\": 225, \"right\": 475, \"bottom\": 550}', '250x250', 5520),
+(61, 'square', '{\"top\": 225, \"left\": 200, \"right\": 550, \"bottom\": 550}', '350x325', 9964),
+(62, 'square', '{\"top\": 175, \"left\": 200, \"right\": 375, \"bottom\": 350}', '175x175', 8047),
+(63, 'square', '{\"top\": 400, \"left\": 275, \"right\": 450, \"bottom\": 550}', '175x150', 954),
+(64, 'square', '{\"top\": 425, \"left\": 225, \"right\": 425, \"bottom\": 550}', '200x125', 7621),
+(65, 'square', '{\"top\": 300, \"left\": 125, \"right\": 375, \"bottom\": 475}', '250x175', 8187),
+(66, 'square', '{\"top\": 175, \"left\": 350, \"right\": 550, \"bottom\": 425}', '200x250', 4107),
+(67, 'square', '{\"top\": 200, \"left\": 375, \"right\": 550, \"bottom\": 425}', '175x225', 210),
+(68, 'square', '{\"top\": 275, \"left\": 200, \"right\": 475, \"bottom\": 475}', '275x200', 4612);
 
 -- --------------------------------------------------------
 
@@ -164,7 +204,7 @@ ALTER TABLE `user_base`
 -- AUTO_INCREMENT for table `draw_square_data`
 --
 ALTER TABLE `draw_square_data`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `draw_triangle_data`
