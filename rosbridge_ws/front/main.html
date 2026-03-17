@@ -1448,6 +1448,32 @@
 
 
         // ===== 載入歷史紀錄到現有表格 =====
+
+        function formatDate(dateInput) {
+               // 1. 完全沒資料直接回傳
+            if (!dateInput) return '—';
+
+            // 2. 轉字串並檢查是否為空字串
+            const dateString = String(dateInput).trim();
+            if (!dateString || dateString === 'null' || dateString === 'undefined') {
+                return '—';
+            }
+
+            // 3. 處理 MySQL 日期格式
+            const normalized = dateString.replace(' ', 'T');
+            const date = new Date(normalized);
+
+            // 4. 檢查有效日期
+            if (isNaN(date.getTime())) {
+                console.warn('無效日期：', dateInput);
+                return '—';
+            }
+
+            // 5. 只取月/日
+            return `${date.getMonth() + 1}/${date.getDate()}`;
+        }
+
+
         function loadShapeHistory() {
                 console.log('載入歷史，ros_ip:', ros_ip);
 
@@ -1477,23 +1503,24 @@
                             const x = match ? parseInt(match[1]) : 0;
                             const y = match ? parseInt(match[2]) : 0;
 
-                            const date = new Date(item.date || Date.now());
-                            const monthDay = (date.getMonth() + 1) + '/' + date.getDate();
+                            // 用安全的日期格式化
+                            const monthDay = formatDate(item.date);
 
                             // 建立每一行
                             const row = tbody.insertRow();
                             row.innerHTML = `
-                    <td>${monthDay}</td>
-                    <td>${x}</td>
-                    <td>${y}</td>
-                    <td>${item.description} (${item.shape || 'square'})</td>
-                    <td>
-                        <button onclick="setValueFromHistory(${x},${y})" 
-                                style="padding:4px 8px;background:#007bff;color:white;border:none;border-radius:3px;font-size:12px;">設定</button>
-                        <button onclick="deleteHistory(${item.id})" 
-                                style="padding:4px 8px;background:#ff4444;color:white;border:none;border-radius:3px;margin-left:4px;font-size:12px;">刪</button>
-                    </td>
-                `;
+                              <td>${monthDay}</td>
+                              <td>${x}</td>
+                              <td>${y}</td>
+                              <td>${item.description} (${item.shape || 'square'})</td>
+    
+                              <td>
+                              <button onclick="setValueFromHistory(${x},${y})" 
+                              style="padding:4px 8px;background:#007bff;color:white;border:none;border-radius:3px;font-size:12px;">設定</button>
+                            <button onclick="deleteHistory(${item.id})" style="...">刪</button>
+                              </td>
+                            `;
+
                         });
 
                         console.log('完成！顯示', data.data.length, '筆資料');

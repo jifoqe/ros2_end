@@ -186,7 +186,7 @@ app.post('/api/create/coordinate_data', (req, res) => {
 app.get('/api/query/coordinate_data', (req, res) => {
   const sql = `SELECT id, shape, date, description, serial_number
                FROM draw_square_data 
-               ORDER BY id DESC LIMIT 10`;
+               ORDER BY id DESC LIMIT 10000`;
 
   connection.query(sql, (err, results) => {
     if (err) {
@@ -199,7 +199,7 @@ app.get('/api/query/coordinate_data', (req, res) => {
       id: row.id,
       shape: row.shape,
       description: row.description,
-      date: typeof row.date === "string" ? JSON.parse(row.date) : row.date,
+      date: row.date, 
       serial_number: row.serial_number
     }));
 
