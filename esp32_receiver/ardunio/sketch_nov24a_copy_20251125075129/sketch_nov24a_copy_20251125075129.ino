@@ -13,12 +13,15 @@ IPAddress local_IP(10, 223, 244, 202);
 IPAddress gateway(10, 223, 244, 1);
 IPAddress subnet(255, 255, 255, 0);
 
+HardwareSerial STM32Serial(2); 
+
 void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
   // ⭐ esp32 IP
   WiFi.config(local_IP, gateway, subnet);
   WiFi.begin(ssid, pass);
+  STM32Serial.begin(115200, SERIAL_8N1, 16, 17);
 
   int maxTry = 20;
   while (WiFi.status() != WL_CONNECTED && maxTry > 0) {
@@ -56,6 +59,7 @@ void loop() {
         buffer[len] = 0; // 結尾
         Serial.print("Received from server: ");
         Serial.println(buffer);
+        STM32Serial.println(buffer);//傳給stm32
       }
     }
 
