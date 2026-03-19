@@ -153,7 +153,7 @@
 
         <section class="control-panel-section">
 
-            <div class="card basic-control-card" id="shape_control_card" id="shapecontrolcard">
+            <div class="card basic-control-card" style="display: none;" id="shape_control_card" id="shapecontrolcard">
                 <h2>三角形與正方形</h2>
                 <div>
                     <label><input type="radio" name="shape" value="square"></label>
@@ -1286,9 +1286,19 @@
         //顯示三角形與正方形的歷史資料
         document.getElementById("history_log").addEventListener("click", function () {
             const card = document.getElementById("shape_control_card");
+            const historyTbody = document.getElementById("historyTbody");
 
             if (card.style.display === "none") {
                 card.style.display = "block";   // 顯示
+
+                // 檢查歷史表格是否已載入
+                if (historyTbody.style.display === "none" &&
+                    (historyTbody.children.length === 0 ||
+                        historyTbody.innerHTML.includes('text-align:center'))) {
+                    historyTbody.style.display = "table-row-group";  // 顯示表格
+                    loadShapeHistory();  // 載入資料
+                }
+                
             } else {
                 card.style.display = "none";    // 隱藏
             }
@@ -1453,62 +1463,64 @@
                // 1. 完全沒資料直接回傳
             if (!dateInput) return '—';
 
-            // 2. 轉字串並檢查是否為空字串
-            const dateString = String(dateInput).trim();
-            if (!dateString || dateString === 'null' || dateString === 'undefined') {
-                return '—';
+            let dateString;
+            if (typeof dateInput === 'object') {
+                // 新格式：{top:0, left:75, ...}
+                dateString = '座標資料';
+            } else if (typeof dateInput === 'string') {
+                // 舊格式：字串或 null
+                dateString = dateInput ? dateInput.substring(0, 10) : '舊資料';
+            } else {
+                dateString = String(dateInput);
             }
 
-            // 3. 處理 MySQL 日期格式
-            const normalized = dateString.replace(' ', 'T');
-            const date = new Date(normalized);
-
-            // 4. 檢查有效日期
-            if (isNaN(date.getTime())) {
-                console.warn('無效日期：', dateInput);
-                return '—';
+            // 簡單日期處理（如果有完整日期字串）
+            if (dateString.includes('-') || dateString.includes('/')) {
+                const date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                }
             }
 
-            // 5. 只取月/日
-            return `${date.getMonth() + 1}/${date.getDate()}`;
+            return dateString.substring(0, 10) || '最近';
         }
 
 
         function loadShapeHistory() {
-                console.log('載入歷史，ros_ip:', ros_ip);
+            console.log('載入歷史，ros_ip:', ros_ip);
 
-                const tbody = document.getElementById('historyTbody');
-                if (!tbody) {
-                    console.error('找不到 historyTbody');
-                    return;
-                }
+            const tbody = document.getElementById('historyTbody');
+            if (!tbody) {
+                console.error('找不到 historyTbody');
+                return;
+            }
 
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">載入中...</td></tr>';
 
-                fetch(`http://${ros_ip}:3000/api/query/coordinate_data`)
-                    .then(res => res.json())
-                    .then(data => {
-                        console.log('API資料筆數:', data.data.length);
+            fetch(`http://${ros_ip}:3000/api/query/coordinate_data`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log('API資料筆數:', data.data.length);
 
-                        if (!data.success || !data.data || data.data.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666;">暫無歷史紀錄</td></tr>';
-                            return;
-                        }
+                    if (!data.success || !data.data || data.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666;">暫無歷史紀錄</td></tr>';
+                        return;
+                    }
 
-                        // 最安全寫法：逐行建立 DOM
-                        tbody.innerHTML = '';
-                        data.data.forEach(function (item) {
-                            // 解析尺寸：'450x200' → x=450, y=200
-                            const match = item.description.match(/(\d+)x(\d+)/);
-                            const hx = match ? parseInt(match[1]) : 0;
-                            const hy = match ? parseInt(match[2]) : 0;
+                    // 最安全寫法：逐行建立 DOM
+                    tbody.innerHTML = '';
+                    data.data.forEach(function (item) {
+                        // 解析尺寸：'450x200' → x=450, y=200
+                        const match = item.description.match(/(\d+)x(\d+)/);
+                        const hx = match ? parseInt(match[1]) : 0;
+                        const hy = match ? parseInt(match[2]) : 0;
 
-                            // 用安全的日期格式化
-                            const monthDay = formatDate(item.date);
+                        // 用安全的日期格式化
+                        const monthDay = item.id ? `#${item.id}` : '無日期';
 
-                            // 建立每一行
-                            const row = tbody.insertRow();
-                            row.innerHTML = `
+                        // 建立每一行
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
                               <td>${monthDay}</td>
                               <td>${hx}</td>
                               <td>${hy}</td>
@@ -1516,14 +1528,24 @@
                               <td><button onclick="setValueFromHistory(this)">設定</button></td>
                             `;
 
-                        });
-
-                        console.log('完成！顯示', data.data.length, '筆資料');
-                    })
-                    .catch(function (err) {
-                        console.error('錯誤:', err);
-                        tbody.innerHTML = '<tr><td colspan="5" style="color:#f00;">載入失敗</td></tr>';
                     });
+
+                    console.log('完成！顯示', data.data.length, '筆資料');
+
+                    // 確保表格顯示
+                    tbody.style.display = 'table-row-group';
+                    const card = document.getElementById('shape_control_card');
+                    if (card) card.style.display = 'block';
+
+                })
+                .catch(function (err) {
+                    console.error('錯誤:', err);
+                    tbody.innerHTML = '<tr><td colspan="5" style="color:#f00;">載入失敗</td></tr>';
+                });
+
+            // console.log('API資料筆數:', data.data.length);
+            // console.log('完成！顯示', data.data.length, '筆資料');
+
         }
 
         // 自動載入

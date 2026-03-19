@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 17, 2026 at 10:31 PM
+-- Generation Time: Mar 19, 2026 at 11:25 PM
 -- Server version: 8.0.44-0ubuntu0.22.04.2
 -- PHP Version: 8.1.2-1ubuntu2.22
 
@@ -39,7 +39,7 @@ CREATE TABLE `car_state` (
 --
 
 INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`) VALUES
-(1, 0.5, 0, '2026-03-17 21:37:43'),
+(1, 0.5, 0, '2026-03-19 23:25:14'),
 (2, 0.5, 0.7, '2025-12-01 14:51:18'),
 (3, 0.5, 0, '2025-12-01 22:52:37'),
 (4, 2, 1, '2025-12-01 22:06:16'),
@@ -131,7 +131,14 @@ INSERT INTO `draw_square_data` (`id`, `shape`, `date`, `description`, `serial_nu
 (65, 'square', '{\"top\": 300, \"left\": 125, \"right\": 375, \"bottom\": 475}', '250x175', 8187),
 (66, 'square', '{\"top\": 175, \"left\": 350, \"right\": 550, \"bottom\": 425}', '200x250', 4107),
 (67, 'square', '{\"top\": 200, \"left\": 375, \"right\": 550, \"bottom\": 425}', '175x225', 210),
-(68, 'square', '{\"top\": 275, \"left\": 200, \"right\": 475, \"bottom\": 475}', '275x200', 4612);
+(68, 'square', '{\"top\": 275, \"left\": 200, \"right\": 475, \"bottom\": 475}', '275x200', 4612),
+(69, 'square', '{\"top\": 200, \"left\": 200, \"right\": 500, \"bottom\": 425}', '300x225', 2922),
+(70, 'square', '{\"top\": 0, \"left\": 75, \"right\": 450, \"bottom\": 375}', '375x375', 8016),
+(71, 'square', '{\"top\": 200, \"left\": 300, \"right\": 725, \"bottom\": 525}', '425x325', 601),
+(72, 'square', '{\"top\": 100, \"left\": 175, \"right\": 725, \"bottom\": 550}', '550x450', 9125),
+(73, 'square', '{\"top\": 200, \"left\": 100, \"right\": 525, \"bottom\": 500}', '425x300', 2112),
+(74, 'square', '{\"top\": 50, \"left\": 75, \"right\": 500, \"bottom\": 525}', '425x475', 1330),
+(75, 'square', '{\"top\": 175, \"left\": 125, \"right\": 700, \"bottom\": 550}', '575x375', 5895);
 
 -- --------------------------------------------------------
 
@@ -146,6 +153,13 @@ CREATE TABLE `draw_triangle_data` (
   `description` text COLLATE utf8mb4_general_ci,
   `serial_number` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='畫三角形資料';
+
+--
+-- Dumping data for table `draw_triangle_data`
+--
+
+INSERT INTO `draw_triangle_data` (`id`, `shape`, `date`, `description`, `serial_number`) VALUES
+(1, 'test', '{\"top\": 0, \"left\": 0, \"right\": 100, \"bottom\": 100}', '100x100', 9999);
 
 -- --------------------------------------------------------
 
@@ -204,13 +218,13 @@ ALTER TABLE `user_base`
 -- AUTO_INCREMENT for table `draw_square_data`
 --
 ALTER TABLE `draw_square_data`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `draw_triangle_data`
 --
 ALTER TABLE `draw_triangle_data`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
