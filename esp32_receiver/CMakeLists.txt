@@ -33,8 +33,13 @@ ament_target_dependencies(udp_receiver rclcpp std_msgs)
 add_executable(subscriber src/subscriber.cpp)
 ament_target_dependencies(subscriber rclcpp std_msgs)
 
+#跟esp32的server溝通
 add_executable(udp_server src/udp_server.cpp)
 ament_target_dependencies(udp_server rclcpp std_msgs)
+
+#跟esp32的micro_ros溝通
+add_executable(micro_ros_receiver src/micro_ros_receiver.cpp)
+ament_target_dependencies(micro_ros_receiver rclcpp std_msgs)
 
 # web_sub
 add_executable(web_sub src/web_sub.cpp)
@@ -88,6 +93,7 @@ install(TARGETS
   subscriber
   udp_receiver
   udp_server
+  micro_ros_receiver
   DESTINATION lib/${PROJECT_NAME})
 
 install(

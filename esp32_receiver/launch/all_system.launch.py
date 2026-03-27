@@ -32,7 +32,7 @@ def generate_launch_description():
             ]
         ),
 
-        #讓網頁可以透過src顯示影像
+        #讓網頁可以透過src顯示影像s
         Node(
             package='web_video_server',
             executable='web_video_server',
