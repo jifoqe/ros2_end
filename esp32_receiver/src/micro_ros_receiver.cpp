@@ -9,10 +9,25 @@ public:
     ESP32Subscriber() : Node("micro_ros_receiver")
     {
         // 訂閱 ESP32 Topic
-        esp32_subscription_ = this->create_subscription<std_msgs::msg::String>(
+        esp32_subscription_1 = this->create_subscription<std_msgs::msg::String>(
             "esp32_topic_1",
             10,
-            std::bind(&ESP32Subscriber::topic_esp32_data, this, _1)
+            std::bind(&ESP32Subscriber::topic_esp32_data_1, this, _1)
+        );
+        esp32_subscription_2 = this->create_subscription<std_msgs::msg::String>(
+            "esp32_topic_2",
+            10,
+            std::bind(&ESP32Subscriber::topic_esp32_data_2, this, _1)
+        );
+        esp32_subscription_3 = this->create_subscription<std_msgs::msg::String>(
+            "esp32_topic_3",
+            10,
+            std::bind(&ESP32Subscriber::topic_esp32_data_3, this, _1)
+        );
+        esp32_subscription_4 = this->create_subscription<std_msgs::msg::String>(
+            "esp32_topic_4",
+            10,
+            std::bind(&ESP32Subscriber::topic_esp32_data_4, this, _1)
         );
 
         // 訂閱 演算法的資料 Topic
@@ -31,10 +46,26 @@ public:
 
 private:
     // 訂閱 ESP32 Topic
-    void topic_esp32_data(const std_msgs::msg::String::SharedPtr msg) const
+    void topic_esp32_data_1(const std_msgs::msg::String::SharedPtr msg) const
     {
-        RCLCPP_INFO(this->get_logger(), "Received from ESP32: '%s'", msg->data.c_str());
+        RCLCPP_INFO(this->get_logger(), "Received from ESP32_1: '%s'", msg->data.c_str());
     }
+
+    void topic_esp32_data_2(const std_msgs::msg::String::SharedPtr msg) const
+    {
+        RCLCPP_INFO(this->get_logger(), "Received from ESP32_2: '%s'", msg->data.c_str());
+    }
+
+    void topic_esp32_data_3(const std_msgs::msg::String::SharedPtr msg) const
+    {
+        RCLCPP_INFO(this->get_logger(), "Received from ESP32_3: '%s'", msg->data.c_str());
+    }
+
+    void topic_esp32_data_4(const std_msgs::msg::String::SharedPtr msg) const
+    {
+        RCLCPP_INFO(this->get_logger(), "Received from ESP32_4: '%s'", msg->data.c_str());
+    }
+
 
     // 訂閱 演算法的資料 Topic
     void algorithm_data(const std_msgs::msg::String::SharedPtr msg)
@@ -70,7 +101,10 @@ private:
     }
 
     // 訂閱用變數
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr esp32_subscription_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr esp32_subscription_1;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr esp32_subscription_2;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr esp32_subscription_3;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr esp32_subscription_4;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr algo_subscription_;
 
     // Publisher 用變數
