@@ -110,9 +110,11 @@ private:
           double yaw_deg = -yaw_rad * 180.0 / CV_PI; // 保持之前顯示習慣的符號（如需要可調整）
           yaw_deg = -yaw_deg;
 
-          RCLCPP_INFO(this->get_logger(),
-              "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
-              id, x_cm, y_cm, yaw_deg, z_cm);
+
+          //gogogogogog
+          // RCLCPP_INFO(this->get_logger(),
+          //     "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
+          //     id, x_cm, y_cm, yaw_deg, z_cm);
 
           std_msgs::msg::String pos_msg;
           // CSV: "id,x_cm,y_cm,yaw_deg"

@@ -52,12 +52,12 @@
                     <p id="mouse_y">0</p>
                 </div>
                 <!-- 測試中12/15 劉丞翔 --> 
-                <!-- <div class="x_y_position">
+                <div class="x_y_position">
                     <p>x:</p>
                     <p id="mouse_camera_x">0</p>
                     <p>y:</p>
                     <p id="mouse_camera_y">0</p>
-                </div> -->
+                </div>
                 <div>
                     <button onclick="draw_round()">抓車子</button>
                     <button onclick="drow_clear()">清除</button>
@@ -360,6 +360,12 @@
         /* ========================================= */
         let newString = "";
         let draw_function = "";
+        let control_mian_data = {
+            mode: 0,             // 功能模式
+            direction: [],// 方向
+            speed: 50,           // 速度（可選）
+            cars: [],     // 控制哪些車
+        };
 
 
         /* ========================================= */
@@ -408,6 +414,7 @@
             messageType: 'std_msgs/String'
         });
 
+        // 訂閱相機位置資料
         const camera_position_data = new ROSLIB.Topic({
             ros: ros,
             name: '/web_position_data',
@@ -482,8 +489,11 @@
                 special_car_x = mouse_x.innerText;
                 special_car_y = mouse_y.innerText;
                 // 比例轉換
+                // scale_number_x = 520/mouse_x.innerText;
+                // scale_number_y = -430/mouse_y.innerText;
+
                 scale_number_x = 520/mouse_x.innerText;
-                scale_number_y = -430/mouse_y.innerText;
+                // scale_number_y = -520/mouse_y.innerText;
             }
         });
 
@@ -516,16 +526,32 @@
                 return
             }
 
-            newString += String(data);
-            for (let i = 0; i < car_number.length; i++) {
-                newString += car_number[i];  // 將每個車輛號碼接上
-                console.log("good:", newString);
-            }
+            // newString += String(data);
+            // for (let i = 0; i < car_number.length; i++) {
+            //     newString += car_number[i];
+            //     console.log("good:", newString);
+            // }
             
-            const msg = new ROSLIB.Message({ data: newString });
+            // const msg = new ROSLIB.Message({ data: newString });
+            // pub.publish(msg);
+            // console.log("已發送:", newString);
+            // newString = "1";
+
+            control_mian_data.mode = 1;
+            control_mian_data.direction.push(data);
+            for (let i = 0; i < car_number.length; i++) {
+                control_mian_data.cars.push(car_number[i]);
+            }
+            const msg = new ROSLIB.Message({
+                data: JSON.stringify(control_mian_data)
+            });
             pub.publish(msg);
-            console.log("已發送:", newString);
-            newString = "1";
+            control_mian_data = {
+                mode: 0,             // 功能模式
+                direction: [],// 方向
+                speed: 50,           // 速度（可選）
+                cars: [],     // 控制哪些車
+            }
         }
 
         /* ========================================= */
@@ -758,7 +784,7 @@
                         if (!carData[i]) continue;
 
                         const originX = carData[i].x * scale_number_x +100;
-                        const originY = -carData[i].y * scale_number_y +100;
+                        const originY = -carData[i].y * scale_number_x +100;
 
                         const dist = Math.hypot(x - originX, y - originY);
                         console.log("距離:", dist)
@@ -1015,8 +1041,9 @@
             for (let i = 1; i < 6; i++) {
                 if (!carData[i]) continue;
                 const originX = carData[i].x * scale_number_x +100;
-                const originY = -carData[i].y * scale_number_y +100;
-                console.log("id:", i,originX, " ", originY)
+                const originY = -carData[i].y * scale_number_x +100;
+                console.log("測試",-carData[i].y);
+                console.log("id:", i,originX, " ", originY);
 
                 // 畫原點
                 ctx.fillStyle = "red";
