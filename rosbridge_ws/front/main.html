@@ -768,7 +768,7 @@
             }
 
             
-            drawPoints += newString
+            // drawPoints += newString; 關掉了第一個號碼
             drawing = true;
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
@@ -958,20 +958,73 @@
         }
 
         function sendDrawDataToROS(points) {
-            // 先檢查 points 是否為空
             if (points === "") {
-                // console.log("沒有資料，跳過傳送");
                 return; // 沒資料就直接結束
             }
-            function_three_data.innerHTML=points;
-            const msg = new ROSLIB.Message({
-                data: points
-            });
+            function_three_data.innerHTML=points;//測試
+            // const msg = new ROSLIB.Message({
+            //     data: points
+            // });
 
+            // pub.publish(msg);
+            // console.log("已傳給 ROS:", points);
+            // drawPoints = "";  // 清空紀錄
+
+
+
+            control_mian_data.mode = 3;
+
+            // control_mian_data.direction.push(data);
+            for (let i = 0; i + 1 < points.length / 8; i++) {
+
+                let base = i * 8;
+                let local_x = 0;
+                let local_y = 0;
+
+                let goal_x  = 0;
+                let goal_y  = 0;
+                local_x = points[base+1]*100 + points[base+2]*10 + points[base+3]*1;
+                local_y = points[base+5]*100 + points[base+6]*10 + points[base+7]*1;
+
+                goal_x  = points[base+9]*100 + points[base+10]*10 + points[base+11]*1;
+                goal_y  = points[base+13]*100 + points[base+14]*10 + points[base+15]*1;
+
+                // console.log("local_X:", local_x);
+                // console.log("local_Y:", local_y);
+                // console.log("goal_X:", goal_x);
+                // console.log("goal_Y:", goal_y);
+
+                // 👉 先判斷 Y（前後）
+                if (goal_y > local_y) {
+                    control_mian_data.direction.push("2"); // 往後
+                } 
+                else if (goal_y < local_y) {
+                    control_mian_data.direction.push("1"); // 往前
+                } 
+                // 👉 再判斷 X（左右）
+                else if (goal_x > local_x) {
+                    control_mian_data.direction.push("4"); // 右
+                } 
+                else if (goal_x < local_x) {
+                    control_mian_data.direction.push("3"); // 左
+                }
+            }
+            for (let i = 0; i < car_number.length; i++) {
+                control_mian_data.cars.push(car_number[i]);
+            }
+            const msg = new ROSLIB.Message({
+                data: JSON.stringify(control_mian_data)
+            });
             pub.publish(msg);
-            console.log("已傳給 ROS:", points);
+            console.log("已傳給 ROS:", control_mian_data);
+            control_mian_data = {
+                mode: 0,             // 功能模式
+                direction: [],// 方向
+                speed: 50,           // 速度（可選）
+                cars: [],     // 控制哪些車
+            }
+            
             drawPoints = "";  // 清空紀錄
-            // newString = "3";
         }
 
         /* ========================================= */
