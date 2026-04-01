@@ -510,3 +510,9 @@ input[type="number"], select {
 /* #shape_control_card {
     border: 5px solid red !important;
 } */
+
+#historyTbody td:last-child button {
+    margin-right: 5px;
+    font-size: 12px;
+    padding: 6px 10px;
+}

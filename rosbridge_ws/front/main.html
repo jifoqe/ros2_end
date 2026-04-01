@@ -864,7 +864,7 @@
             }
 
             //紀錄歷史紀錄
-            if (drawPoints.length > 0 && draw_function.includes("2")) {
+            if (draw_function.includes("2") && rectState.active) {
                 rectState.current.x = Math.round(rectState.current.x / 25) * 25;
                 rectState.current.y = Math.round(rectState.current.y / 25) * 25;
                 drawHistory.unshift({
@@ -1601,11 +1601,11 @@
                         // 建立每一行
                         const row = tbody.insertRow();
                         row.innerHTML = `
-                              <td>${monthDay}</td>
-                              <td>${hx}</td>
-                              <td>${hy}</td>
-                              <td>${item.description}</td>
-                              <td><button onclick="setValueFromHistory(this)">設定</button></td>
+                              <td>${monthDay}</td><td>${hx}</td><td>${hy}</td><td>${item.description}</td>
+                              <td>
+                                <button onclick="setValueFromHistory(this)">設定</button>
+                                <button onclick="deleteHistory('${item.id}')">刪除</button>
+                              </td>
                             `;
 
                     });
@@ -1662,17 +1662,42 @@
         }
 
         function deleteHistory(id) {
-            if (!confirm('確定刪除？')) return;
+            console.log('刪除ID:', id);
+            if (!confirm(`確定刪除ID ${id}？`)) return;
 
-            fetch(`http://${ros_ip}:3000/api/delete/coordinate_data`, {
+            const url = `http://${ros_ip}:3000/api/delete/coordinate_data`;
+            
+            // 關鍵：加 type 參數！
+            fetch(url, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id })
+                body: JSON.stringify({ 
+                    type: 'square',  // 或 'triangle'，依資料決定
+                    id: id 
+                })
             })
-                .then(res => res.json())
-                .then(() => loadShapeHistory())
-                .catch(err => alert('刪除失敗: ' + err));
-        }
+            .then(res => {
+                console.log('伺服器狀態:', res.status);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                console.log('刪除結果:', data);
+                if (data.success) {
+                    const delBtn = document.querySelector(`button[onclick="deleteHistory('${id}')"]`);
+                    if (delBtn) delBtn.closest('tr').remove();
+                    alert('刪除成功！');
+                } else {
+                    alert('後端錯誤: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error('錯誤:', err);
+                alert('刪除失敗: ' + err.message);
+            });
+}
+
+
 
 
 

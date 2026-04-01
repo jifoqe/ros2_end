@@ -26,7 +26,7 @@ def generate_launch_description():
             name='camera_node',
             output='screen',
             parameters=[
-                {"video_device": "/dev/video2"},   # ← 在這裡指定你的外接相機
+                {"video_device": "/dev/video0"},   # ← 在這裡指定你的外接相機
                 # {"image_size": [640, 480]},        # 可選
                 {"pixel_format": "YUYV"}           # 可選
             ]
