@@ -1,5 +1,8 @@
 <!-- python3 -m http.server 8000 -->
 <!-- http://localhost:8000/main.html -->
+<!-- ros2 run usb_cam usb_cam_node_exe --ros-args -p video_device:=/dev/video2 開相機-->
+<!-- ros2 run camera_calibration cameracalibrator --size 8x6 --square 0.025 image:=/image_raw camera:=/camera 矯正器-->
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -458,6 +461,8 @@
         let special_car_x;
         let special_car_y;
         let scale_number;
+        let scale_number_x;
+        let scale_number_base;
         camera_position_data.subscribe((msg) => {
             const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
@@ -479,21 +484,20 @@
                 // draw_round(`
             }
             if (car_id == 11) {
+                //滑鼠值
                 const web_mouse_x = document.getElementById(`mouse_x`);
                 const web_mouse_y = document.getElementById(`mouse_y`);
-                const mouse_x = document.getElementById(`mouse_camera_x`);
-                const mouse_y = document.getElementById(`mouse_camera_y`);
+                //id=0 11的值ssss
+                const mouse_x_zero = 50;
+                const mouse_y_zero = 85;
+                const mouse_x_eleven = 170;
+                const mouse_y_eleven = 85;
+                const web_diffrence = mouse_x_eleven - mouse_x_zero;
 
-                mouse_x.innerText = x.toFixed(1);
-                mouse_y.innerText = y.toFixed(1);
-                special_car_x = mouse_x.innerText;
-                special_car_y = mouse_y.innerText;
                 // 比例轉換
-                // scale_number_x = 520/mouse_x.innerText;
-                // scale_number_y = -430/mouse_y.innerText;
-
-                scale_number_x = 520/mouse_x.innerText;
-                // scale_number_y = -520/mouse_y.innerText;
+                scale_number_x = web_diffrence/33.6;
+                scale_number_base = 100/scale_number_x;
+                // console.log("scale_number_x:", scale_number_x);
             }
         });
 
@@ -749,8 +753,6 @@
             //控制尺寸的地方 之後修改
             number_1 = Number(database_car_data.x);
             number_2 = Number(database_car_data.y);
-            // number_1 = 1;
-            // number_2 = 0;
             console.log("x:", number_1, "y:", number_2);
 
             const rect = canvas.getBoundingClientRect();
@@ -785,6 +787,7 @@
 
                         const originX = carData[i].x * scale_number_x +100;
                         const originY = -carData[i].y * scale_number_x +100;
+                        // const originY = -410;
 
                         const dist = Math.hypot(x - originX, y - originY);
                         console.log("距離:", dist)
@@ -864,7 +867,7 @@
             }
 
             //紀錄歷史紀錄
-            if (draw_function.includes("2") && rectState.active) {
+            if (drawPoints.length > 0 && draw_function.includes("2")) {
                 rectState.current.x = Math.round(rectState.current.x / 25) * 25;
                 rectState.current.y = Math.round(rectState.current.y / 25) * 25;
                 drawHistory.unshift({
@@ -917,14 +920,14 @@
             //     alert("起始點必須要車子上面");
             // }
             const rect = canvas.getBoundingClientRect();
-            const raw_ix = Math.round(x / 25) * 25;
-            const raw_iy = Math.round(y / 25) * 25;
+            const raw_ix = Math.round(x / 110) * 110;
+            const raw_iy = Math.round(y / 110) * 110;
 
             // 轉換成「左下角為 0,0」
             let ix = raw_ix;
             let iy = raw_iy;
-            ix = Math.round(ix / 25) * 25;
-            iy = Math.round(iy / 25) * 25;
+            ix = Math.round(ix / 110) * 110;
+            iy = Math.round(iy / 110) * 110;
 
             if (ix === last_ix && iy === last_iy) {
                 return;  // 不重複送出
@@ -1091,11 +1094,12 @@
         function draw_round() {
             drow_clear();
             if (!carData[0]) return; // 確認原點存在
-            for (let i = 1; i < 6; i++) {
+            for (let i = 1; i < 5; i++) {
                 if (!carData[i]) continue;
-                const originX = carData[i].x * scale_number_x +100;
-                const originY = -carData[i].y * scale_number_x +100;
-                console.log("測試",-carData[i].y);
+                const originX = carData[i].x * scale_number_x+100;
+                const originY = -carData[i].y * scale_number_x+100;
+                // const originY = 410;
+                console.log("測試x",-carData[i].y);
                 console.log("id:", i,originX, " ", originY);
 
                 // 畫原點
@@ -1601,11 +1605,11 @@
                         // 建立每一行
                         const row = tbody.insertRow();
                         row.innerHTML = `
-                              <td>${monthDay}</td><td>${hx}</td><td>${hy}</td><td>${item.description}</td>
-                              <td>
-                                <button onclick="setValueFromHistory(this)">設定</button>
-                                <button onclick="deleteHistory('${item.id}')">刪除</button>
-                              </td>
+                              <td>${monthDay}</td>
+                              <td>${hx}</td>
+                              <td>${hy}</td>
+                              <td>${item.description}</td>
+                              <td><button onclick="setValueFromHistory(this)">設定</button></td>
                             `;
 
                     });
@@ -1662,42 +1666,17 @@
         }
 
         function deleteHistory(id) {
-            console.log('刪除ID:', id);
-            if (!confirm(`確定刪除ID ${id}？`)) return;
+            if (!confirm('確定刪除？')) return;
 
-            const url = `http://${ros_ip}:3000/api/delete/coordinate_data`;
-            
-            // 關鍵：加 type 參數！
-            fetch(url, {
+            fetch(`http://${ros_ip}:3000/api/delete/coordinate_data`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    type: 'square',  // 或 'triangle'，依資料決定
-                    id: id 
-                })
+                body: JSON.stringify({ id: id })
             })
-            .then(res => {
-                console.log('伺服器狀態:', res.status);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                console.log('刪除結果:', data);
-                if (data.success) {
-                    const delBtn = document.querySelector(`button[onclick="deleteHistory('${id}')"]`);
-                    if (delBtn) delBtn.closest('tr').remove();
-                    alert('刪除成功！');
-                } else {
-                    alert('後端錯誤: ' + data.message);
-                }
-            })
-            .catch(err => {
-                console.error('錯誤:', err);
-                alert('刪除失敗: ' + err.message);
-            });
-}
-
-
+                .then(res => res.json())
+                .then(() => loadShapeHistory())
+                .catch(err => alert('刪除失敗: ' + err));
+        }
 
 
 

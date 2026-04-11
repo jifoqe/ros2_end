@@ -11,9 +11,10 @@ public:
   ArucoCameraNode()
   : Node("aruco_camera_node"),
     origin_set_(false),
-    origin_id_(0) // 把 ID 0 當作 world origin，若要改其他 ID，改這裡
+    origin_id_(0)
   {
-    subscription_ = this->create_subscription<sensor_msgs::msg::Image>("/image_raw", 10,
+    subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
+      "/image_raw", 10,
       std::bind(&ArucoCameraNode::image_callback, this, std::placeholders::_1));
 
     publisher_ = this->create_publisher<sensor_msgs::msg::Image>("/camera_image", 10);
@@ -22,16 +23,48 @@ public:
 
     aruco_dict_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
 
-    // 相機內參 (請換成你自己的校正值)
-    camera_matrix_ = (cv::Mat1d(3,3) << 600, 0, 320,
-                                        0, 600, 240,
-                                        0, 0, 1);
-    dist_coeffs_ = cv::Mat::zeros(1, 5, CV_64F);
+    camera_matrix_ = (cv::Mat1d(3,3) <<
+      658.187275, 0.0, 332.285798,
+      0.0, 658.049522, 234.767034,
+      0.0, 0.0, 1.0);
 
-    marker_length_ = 0.05; // 公尺
+    dist_coeffs_ = (cv::Mat1d(1,5) <<
+      0.014150,
+      -0.111555,
+      0.005415,
+      -0.000626,
+      0.0);
+
+    marker_length_ = 0.096; // meters
   }
 
 private:
+  //旋轉矩陣
+  cv::Mat T_inv(const cv::Mat &R, const cv::Mat &t)
+  {
+    cv::Mat R_inv = R.t();
+    cv::Mat t_inv = -R_inv * t;
+
+    cv::Mat T = cv::Mat::eye(4,4,CV_64F);
+    R_inv.copyTo(T(cv::Rect(0,0,3,3)));
+    t_inv.copyTo(T(cv::Rect(3,0,1,3)));
+    return T;
+  }
+
+  //從 rvec 和 tvec 轉換成 4x4 的變換矩陣
+  cv::Mat T_from_rvec_tvec(const cv::Vec3d &rvec, const cv::Vec3d &tvec)
+  {
+    cv::Mat R;
+    cv::Rodrigues(rvec, R);
+
+    cv::Mat t = (cv::Mat1d(3,1) << tvec[0], tvec[1], tvec[2]);
+
+    cv::Mat T = cv::Mat::eye(4,4,CV_64F);
+    R.copyTo(T(cv::Rect(0,0,3,3)));
+    t.copyTo(T(cv::Rect(3,0,1,3)));
+    return T;
+  }
+
   void image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
   {
     try {
@@ -41,106 +74,153 @@ private:
 
       std::vector<int> ids;
       std::vector<std::vector<cv::Point2f>> corners;
-      cv::aruco::detectMarkers(frame, aruco_dict_, corners, ids);
+      cv::aruco::detectMarkers(frame, aruco_dict_, corners, ids);//找到aruco marker
 
-      if (!ids.empty()) {
-        cv::aruco::drawDetectedMarkers(frame, corners, ids);
+      if (ids.empty()) return;
 
-        std::vector<cv::Vec3d> rvecs, tvecs;
-        cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+      cv::aruco::drawDetectedMarkers(frame, corners, ids);//畫到frame上匡
 
-        for (size_t i = 0; i < ids.size(); i++) {
-          cv::aruco::drawAxis(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], 0.05);
+      //算出3d位置
+      std::vector<cv::Vec3d> rvecs, tvecs;
+      cv::aruco::estimatePoseSingleMarkers(
+        corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
-          // 取得 marker -> camera 的旋轉矩陣 R_i 與平移向量 t_i
-          cv::Mat R_i;
-          cv::Rodrigues(rvecs[i], R_i); // R_i : rotation matrix from marker_i to camera
-          cv::Mat t_i = (cv::Mat1d(3,1) << tvecs[i][0], tvecs[i][1], tvecs[i][2]); // in meters
+      std::map<int, cv::Mat> T_cam_marker;
 
-          int id = ids[i];
+      //畫出xyz軸
+      for (size_t i = 0; i < ids.size(); i++) {
+        cv::aruco::drawAxis(frame, camera_matrix_, dist_coeffs_,rvecs[i], tvecs[i], 0.05);
+        T_cam_marker[ids[i]] = T_from_rvec_tvec(rvecs[i], tvecs[i]);
+      }
 
-          // 如果是 world origin marker，儲存它的 R0, t0（marker -> camera）
-          if (id == origin_id_) {
-              R0_ = R_i.clone();
-              t0_ = t_i.clone();
-              origin_set_ = true;
+      // -----------------------------
+      // STEP 1: define world = marker0
+      // -----------------------------
+      if (!origin_set_) {
+        if (T_cam_marker.count(origin_id_) == 0) {
+          return;
+        }
+        T_world_cam_ = T_inv(T_cam_marker[origin_id_](cv::Rect(0,0,3,3)),T_cam_marker[origin_id_](cv::Rect(3,0,1,3)));
+        origin_set_ = true;
+      }
 
-              // 將 origin 自己在 world 中定義為 (0,0,0) 並發布（可選）
-              double x0_cm = 0.0;
-              double y0_cm = 0.0;
-              double yaw0 = 0.0;
+      // -----------------------------
+      // STEP 2: compute all markers in world frame
+      // -----------------------------
+      // for (auto &p : T_cam_marker)
+      // {
+      //   int id = p.first;
+      //   cv::Mat T_world_marker = T_world_cam_ * p.second;
 
-              // RCLCPP_INFO(this->get_logger(), "Origin (ID %d) set.", origin_id_);
+      //   cv::Mat R = T_world_marker(cv::Rect(0,0,3,3));
+      //   cv::Mat t = T_world_marker(cv::Rect(3,0,1,3));
 
-              std_msgs::msg::String pos_msg;
-              char buf0[128];
-              std::snprintf(buf0, sizeof(buf0), "%d,%.6f,%.6f,%.3f", id, x0_cm, y0_cm, yaw0);
-              pos_msg.data = std::string(buf0);
-              position_publisher_->publish(pos_msg);
+      //   double x_cm = t.at<double>(0,0) * 100.0;
+      //   double y_cm = t.at<double>(1,0) * 100.0;
 
-              continue; // origin 不需要再轉換
+      //   double yaw = atan2(R.at<double>(1,0), R.at<double>(0,0));
+      //   double yaw_deg = yaw * 180.0 / CV_PI;
+
+      //   std_msgs::msg::String msg_out;
+      //   char buf[128];
+      //   std::snprintf(buf, sizeof(buf), "%d,%.3f,%.3f,%.2f",id, x_cm, y_cm, yaw_deg);
+      //   if(id == 2){
+      //     RCLCPP_INFO(this->get_logger(), "Car %d: x=%.2f cm, y=%.2f cm, yaw=%.2f deg", id, x_cm, y_cm, yaw_deg);
+      //   }
+      //   msg_out.data = std::string(buf);
+      //   position_publisher_->publish(msg_out);
+      // }
+      
+      std::map<int, double> x_prev_, y_prev_, yaw_prev_;
+      bool first_frame_ = true;
+      double alpha_ = 0.2;   // 0.1~0.3（越小越穩）
+      // ===============================
+      // STEP 2: compute all markers in world frame（完整版）
+      // ===============================
+      for (auto &p : T_cam_marker)
+      {
+          int id = p.first;
+
+          // world = world_cam * cam_marker
+          cv::Mat T_world_marker = T_world_cam_ * p.second;
+
+          cv::Mat R = T_world_marker(cv::Rect(0,0,3,3));
+          cv::Mat t = T_world_marker(cv::Rect(3,0,1,3));
+
+          // ===============================
+          // 1️⃣ 取出原始數據（cm）
+          // ===============================
+          double x_now = t.at<double>(0,0) * 100.0;
+          double y_now = t.at<double>(1,0) * 100.0;
+
+          double yaw = atan2(R.at<double>(1,0), R.at<double>(0,0));
+          double yaw_now = yaw * 180.0 / CV_PI;
+
+          // ===============================
+          // 2️⃣ 初始化
+          // ===============================
+          if (x_prev_.find(id) == x_prev_.end())
+          {
+              x_prev_[id] = x_now;
+              y_prev_[id] = y_now;
+              yaw_prev_[id] = yaw_now;
           }
 
-          // 如果 world origin 還沒被偵測到，跳過其他 marker（或你也可以選擇發 camera frame pose）
-          if (!origin_set_) {
-              // optional: 發 camera frame 下的原始資料（若需要）
-              RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Origin (ID %d) not detected yet, skipping ID %d", origin_id_, id);
-              continue;
+          // ===============================
+          // 3️⃣ 防暴衝（跳太大直接忽略）
+          // ===============================
+          if (std::abs(x_now - x_prev_[id]) > 10.0) x_now = x_prev_[id];
+          if (std::abs(y_now - y_prev_[id]) > 10.0) y_now = y_prev_[id];
+          if (std::abs(yaw_now - yaw_prev_[id]) > 30.0) yaw_now = yaw_prev_[id];
+
+          // ===============================
+          // 4️⃣ 低通濾波（核心）
+          // ===============================
+          double x_cm = alpha_ * x_now + (1 - alpha_) * x_prev_[id];
+          double y_cm = alpha_ * y_now + (1 - alpha_) * y_prev_[id];
+          double yaw_deg = alpha_ * yaw_now + (1 - alpha_) * yaw_prev_[id];
+
+          // 更新歷史值
+          x_prev_[id] = x_cm;
+          y_prev_[id] = y_cm;
+          yaw_prev_[id] = yaw_deg;
+
+          // ===============================
+          // 5️⃣ LOG（只印車子 id=2）
+          // ===============================
+          if (id == 2)
+          {
+              RCLCPP_INFO(this->get_logger(),
+                          "Car %d: x=%.2f cm, y=%.2f cm, yaw=%.2f deg",
+                          id, x_cm, y_cm, yaw_deg);
           }
 
-          // 計算 world (marker0) 座標下的位移：
-          // T_cam_marker = [R_i, t_i]
-          // world frame 為 marker0 的 frame
-          // T_world_marker_i = inv(T_cam_marker0) * T_cam_marker_i
-          // 因為 inv(T_cam_marker0) = [R0_.t(), -R0_.t() * t0_]
-          cv::Mat R0_inv = R0_.t();
-          cv::Mat t_world = R0_inv * (t_i - t0_); // translation of marker_i in world frame (meters)
-          cv::Mat R_world = R0_inv * R_i;         // rotation of marker_i in world frame
-
-          // 轉成你慣用的單位 / 方向（你原本使用 cm 且把 y 翻轉成上為正）
-          double x_cm = t_world.at<double>(0,0) * 100.0 * 2;
-          double y_cm = t_world.at<double>(1,0) * 100.0 * 2;
-          double z_cm = t_world.at<double>(2,0) * 100.0;
-
-          // 如果你想要 y 向上為正（左下為原點樣式），把 y 取反（這次是對所有 marker 一致）
-          // y_cm = -y_cm;
-
-          // 從 R_world 計算 yaw（以 Z 軸為旋轉軸），跟你原本的方法類似
-          double yaw_rad = atan2(R_world.at<double>(1,0), R_world.at<double>(0,0));
-          double yaw_deg = -yaw_rad * 180.0 / CV_PI; // 保持之前顯示習慣的符號（如需要可調整）
-          yaw_deg = -yaw_deg;
-
-
-          //gogogogogog
-          // RCLCPP_INFO(this->get_logger(),
-          //     "ID:%d -> x: %.3f cm, y: %.3f cm, yaw: %.1f deg (z: %.3f cm)",
-          //     id, x_cm, y_cm, yaw_deg, z_cm);
-
-          std_msgs::msg::String pos_msg;
-          // CSV: "id,x_cm,y_cm,yaw_deg"
+          // ===============================
+          // 6️⃣ 發布 ROS2 訊息
+          // ===============================
+          std_msgs::msg::String msg_out;
           char buf[128];
-          std::snprintf(buf, sizeof(buf), "%d,%.6f,%.6f,%.3f", id, x_cm, y_cm, yaw_deg);
-          pos_msg.data = std::string(buf);
-          position_publisher_->publish(pos_msg);
-        } 
+          std::snprintf(buf, sizeof(buf), "%d,%.2f,%.2f,%.2f",
+                        id, x_cm, y_cm, yaw_deg);
+
+          msg_out.data = std::string(buf);
+          position_publisher_->publish(msg_out);
       }
 
       cv::imshow("Camera", frame);
-      cv::imshow("Gray Image", gray);
+      cv::imshow("Gray", gray);
       cv::waitKey(1);
 
-      auto out_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
-      publisher_->publish(*out_msg);
-
-      auto gray_msg = cv_bridge::CvImage(msg->header, "mono8", gray).toImageMsg();
-      gray_publisher_->publish(*gray_msg);
+      publisher_->publish(*cv_bridge::CvImage(msg->header,"bgr8",frame).toImageMsg());
+      gray_publisher_->publish(*cv_bridge::CvImage(msg->header,"mono8",gray).toImageMsg());
 
     }
     catch (cv_bridge::Exception &e) {
-      RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
+      RCLCPP_ERROR(this->get_logger(), "%s", e.what());
     }
   }
 
+private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr gray_publisher_;
@@ -151,11 +231,9 @@ private:
   cv::Mat dist_coeffs_;
   double marker_length_;
 
-  // world origin 相關
-  bool origin_set_;
   int origin_id_;
-  cv::Mat R0_; // rotation matrix marker0 -> camera
-  cv::Mat t0_; // translation marker0 -> camera
+  bool origin_set_;
+  cv::Mat T_world_cam_;
 };
 
 int main(int argc, char **argv)
