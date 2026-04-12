@@ -275,13 +275,13 @@
                     <label for="vehicle4_check">機台4</label>
                 </div>
                 <div class="movement-controls">
-                    <button class="action-btn tertiary up" onclick="send_direction('1')">⬆️ 前 (Front)</button>
-                    <button class="action-btn tertiary left" onclick="send_direction('3')">⬅️ 左轉 (Lift)</button>
-                    <button class="action-btn tertiary rotate-ccw" onclick="send_direction('6')">⟲ 逆時針 (CCW)</button>
-                    <button class="action-btn danger stop" onclick="send_direction('7')">🛑 停 (Stop)</button>
-                    <button class="action-btn tertiary rotate-cw" onclick="send_direction('5')">⟳ 順時針 (CW)</button>
-                    <button class="action-btn tertiary right" onclick="send_direction('4')">➡️ 右轉 (Right)</button>
-                    <button class="action-btn tertiary down" onclick="send_direction('2')">⬇️ 後 (Back)</button>
+                    <button class="action-btn tertiary up" onclick="send_direction('1')">⬆️ 前 1(Front)</button>
+                    <button class="action-btn tertiary left" onclick="send_direction('3')">⬅️ 左轉 3(Lift)</button>
+                    <button class="action-btn tertiary rotate-ccw" onclick="send_direction('6')">⟲ 逆時針 6(CCW)</button>
+                    <button class="action-btn danger stop" onclick="send_direction('7')">🛑 停 7(Stop)</button>
+                    <button class="action-btn tertiary rotate-cw" onclick="send_direction('5')">⟳ 順時針 5(CW)</button>
+                    <button class="action-btn tertiary right" onclick="send_direction('4')">➡️ 右轉 4(Right)</button>
+                    <button class="action-btn tertiary down" onclick="send_direction('2')">⬇️ 後 2(Back)</button>
                 </div>
             </div>
 
@@ -463,6 +463,8 @@
         let scale_number;
         let scale_number_x;
         let scale_number_base;
+        const init_car_x = 110;
+        const init_car_y = 70;
         camera_position_data.subscribe((msg) => {
             const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
@@ -487,17 +489,15 @@
                 //滑鼠值
                 const web_mouse_x = document.getElementById(`mouse_x`);
                 const web_mouse_y = document.getElementById(`mouse_y`);
-                //id=0 11的值ssss
-                const mouse_x_zero = 50;
-                const mouse_y_zero = 85;
-                const mouse_x_eleven = 170;
-                const mouse_y_eleven = 85;
+                //id=0 11的值
+                const mouse_x_zero = init_car_x;
+                const mouse_x_eleven = 238;
                 const web_diffrence = mouse_x_eleven - mouse_x_zero;
 
                 // 比例轉換
                 scale_number_x = web_diffrence/33.6;
-                scale_number_base = 100/scale_number_x;
-                // console.log("scale_number_x:", scale_number_x);
+                scale_number_base = 5*scale_number_x;
+                // console.log("scale_number_base:", scale_number_base);
             }
         });
 
@@ -753,7 +753,7 @@
             //控制尺寸的地方 之後修改
             number_1 = Number(database_car_data.x);
             number_2 = Number(database_car_data.y);
-            console.log("x:", number_1, "y:", number_2);
+            // console.log("x:", number_1, "y:", number_2);
 
             const rect = canvas.getBoundingClientRect();
             const inside =
@@ -785,8 +785,8 @@
                     for (let i = 1; i < 6; i++) {
                         if (!carData[i]) continue;
 
-                        const originX = carData[i].x * scale_number_x +100;
-                        const originY = -carData[i].y * scale_number_x +100;
+                        const originX = carData[i].x * scale_number_x +init_car_x;
+                        const originY = -carData[i].y * scale_number_x +init_car_y;
                         // const originY = -410;
 
                         const dist = Math.hypot(x - originX, y - originY);
@@ -857,6 +857,10 @@
 
             if (drawPoints.length > 0 && draw_function.includes("1")) {
                 const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
+                // const jsonData = JSON.stringify(control_mian_data, null, 2);
+                // const confirmSend = confirm(
+                //     "繪圖完成！\n是否送出給 ROS？\n\n" + jsonData
+                // );
 
                 if (confirmSend) {
                     sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
@@ -902,9 +906,6 @@
                 sendDrawDataToROS(drawPoints);
                 drawing = false;
             }
-
-
-
             drawing = false;
         });
 
@@ -920,14 +921,14 @@
             //     alert("起始點必須要車子上面");
             // }
             const rect = canvas.getBoundingClientRect();
-            const raw_ix = Math.round(x / 110) * 110;
-            const raw_iy = Math.round(y / 110) * 110;
+            const raw_ix = Math.round(x / scale_number_base) * scale_number_base;
+            const raw_iy = Math.round(y / scale_number_base) * scale_number_base;
 
             // 轉換成「左下角為 0,0」
             let ix = raw_ix;
             let iy = raw_iy;
-            ix = Math.round(ix / 110) * 110;
-            iy = Math.round(iy / 110) * 110;
+            ix = Math.round(ix / scale_number_base) * scale_number_base;
+            iy = Math.round(iy / scale_number_base) * scale_number_base;
 
             if (ix === last_ix && iy === last_iy) {
                 return;  // 不重複送出
@@ -936,9 +937,10 @@
             last_iy = iy;
             
             console.log("x:",ix ,"y:",iy)
-            // drawPoints += pad3(ix) + pad3
-            drawPoints += encodeCoord(ix);
-            drawPoints += encodeCoord(iy);
+            // drawPoints += encodeCoord(ix);
+            // drawPoints += encodeCoord(iy);
+            drawPoints += encodeCoord(parseInt(ix));
+            drawPoints += encodeCoord(parseInt(iy));
 
             ctx.lineTo(raw_ix, raw_iy);
             // ctx.lineTo(x, y);
@@ -970,7 +972,7 @@
             // });
 
             // pub.publish(msg);
-            // console.log("已傳給 ROS:", points);
+            console.log("已傳給 ROS:", points);
             // drawPoints = "";  // 清空紀錄
 
 
@@ -992,10 +994,10 @@
                 goal_x  = points[base+9]*100 + points[base+10]*10 + points[base+11]*1;
                 goal_y  = points[base+13]*100 + points[base+14]*10 + points[base+15]*1;
 
-                // console.log("local_X:", local_x);
-                // console.log("local_Y:", local_y);
-                // console.log("goal_X:", goal_x);
-                // console.log("goal_Y:", goal_y);
+                console.log("local_X:", local_x);
+                console.log("local_Y:", local_y);
+                console.log("goal_X:", goal_x);
+                console.log("goal_Y:", goal_y);
 
                 // 👉 先判斷 Y（前後）
                 if (goal_y > local_y) {
@@ -1096,8 +1098,8 @@
             if (!carData[0]) return; // 確認原點存在
             for (let i = 1; i < 5; i++) {
                 if (!carData[i]) continue;
-                const originX = carData[i].x * scale_number_x+100;
-                const originY = -carData[i].y * scale_number_x+100;
+                const originX = carData[i].x * scale_number_x+init_car_x;
+                const originY = -carData[i].y * scale_number_x+init_car_y;
                 // const originY = 410;
                 console.log("測試x",-carData[i].y);
                 console.log("id:", i,originX, " ", originY);

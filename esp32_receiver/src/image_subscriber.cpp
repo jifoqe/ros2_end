@@ -188,12 +188,12 @@ private:
           // ===============================
           // 5️⃣ LOG（只印車子 id=2）
           // ===============================
-          if (id == 2)
-          {
-              RCLCPP_INFO(this->get_logger(),
-                          "Car %d: x=%.2f cm, y=%.2f cm, yaw=%.2f deg",
-                          id, x_cm, y_cm, yaw_deg);
-          }
+          // if (id == 2)
+          // {
+          //     RCLCPP_INFO(this->get_logger(),
+          //                 "Car %d: x=%.2f cm, y=%.2f cm, yaw=%.2f deg",
+          //                 id, x_cm, y_cm, yaw_deg);
+          // }
 
           // ===============================
           // 6️⃣ 發布 ROS2 訊息
