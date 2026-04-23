@@ -239,14 +239,37 @@
                     </div>
                 </form>
             </div>
-            
-            <!-- <div class="card basic-control-card">
-                <h2>多機模式</h2>
-                <div class="button-group">
-                    <button class="action-btn primary" onclick="sendMsg()">關閉</button>
-                    <button class="action-btn primary" onclick="sendMsg()">啟動</button>
-                </div>
-            </div> -->
+
+            <div class="card advanced-control-card">
+                <h2>距離測試</h2>
+                <form id="velocity-form" onsubmit="event.preventDefault(); distance_test();">
+                    <div class="form-group">
+                        <label for="vehicle-select2">選擇車輛:</label>
+                        <select id="vehicle-select2" name="vehicle-select">
+                            <option value="1">車輛1</option>
+                            <option value="2">車輛2</option>
+                            <option value="3">車輛3</option>
+                            <option value="4">車輛4</option>
+                            <option value="5">全部</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direction">方向選擇:</label>
+                        <input type="number" id="direction" value="1" step="0.1" min="0" requirsssed>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="distance">距離參數:</label>
+                        <input type="number" id="distance" value="0.0" step="0.1" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="action-btn secondary">重設</button>
+                        <button type="submit" class="action-btn primary">送出速度指令</button>
+                    </div>
+                </form>
+            </div>
 
             <div class="card function-selection-card">
                 <h2>功能模式選擇</h2>
@@ -256,6 +279,7 @@
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="3">繪圖控制</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">多機導航</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">初始化</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="6">移動測試</button>
                 </div>
             </div>
 
@@ -320,6 +344,43 @@
     </main>
 
 <script>
+    /* ========================================= */
+    /* 全域參數*/
+    /* ========================================= */
+    let newString = "";
+    let draw_function = "";
+    let control_mian_data = {
+        mode: 0,             // 功能模式
+        direction: [],// 方向
+        speed: 50,           // 速度（可選）
+        cars: [],     // 控制哪些車
+        test_param: 0,      //測試參數
+    };
+
+    function distance_test(){
+        const vehicleSelect = document.getElementById("vehicle-select2").value;
+        const direction = parseFloat(document.getElementById("direction").value);
+        const distance = parseFloat(document.getElementById("distance").value);
+        console.log("vehicleSelect2:", vehicleSelect);
+        
+        let targets = [];
+        if(vehicleSelect === "5") {
+            control_mian_data.cars = [1,2,3,4];
+        } else {
+            control_mian_data.cars = [parseInt(vehicleSelect)]; 
+        }
+        
+        control_mian_data.mode = 4;//測試功能
+        control_mian_data.direction = [String(direction)];
+        control_mian_data.test_param = distance;
+        console.log("distance_test data:", control_mian_data);
+
+        const msg = new ROSLIB.Message({
+            data: JSON.stringify(control_mian_data)
+        });
+        pub.publish(msg);
+    }
+
     function sendVelocityControl() {
         const vehicleSelect = document.getElementById("vehicle-select").value;
         const linearSpeed = parseFloat(document.getElementById("linear-speed").value);
@@ -358,17 +419,7 @@
     }
 </script>
     <script>
-        /* ========================================= */
-        /* 全域參數*/
-        /* ========================================= */
-        let newString = "";
-        let draw_function = "";
-        let control_mian_data = {
-            mode: 0,             // 功能模式
-            direction: [],// 方向
-            speed: 50,           // 速度（可選）
-            cars: [],     // 控制哪些車
-        };
+
 
 
         /* ========================================= */
@@ -463,8 +514,8 @@
         let scale_number;
         let scale_number_x;
         let scale_number_base;
-        const init_car_x = 110;
-        const init_car_y = 70;
+        const init_car_x = 145;
+        const init_car_y = 40;
         camera_position_data.subscribe((msg) => {
             const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
