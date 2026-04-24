@@ -822,7 +822,7 @@
             }
 
             
-            // drawPoints += newString; 關掉了第一個號碼
+            drawPoints += newString; //關掉了第一個號碼
             drawing = true;
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
@@ -902,6 +902,7 @@
 
         // 放開滑鼠 → 停止畫 + 確認送出
         document.addEventListener("mouseup", () => {
+            console.log('方開了', drawPoints);
             ctx.beginPath();
             if (drawing == false){
                 return;
@@ -939,7 +940,6 @@
                 const height = Math.abs(rectState.current.y - rectState.start.y);
                 document.getElementById("square_x").value = width;
                 document.getElementById("square_y").value = height;
-
             }
 
             if (draw_function.includes('3')) {
@@ -1146,7 +1146,7 @@
 
         // 抓車子
         function draw_round() {
-            drow_clear();
+            // drow_clear();
             if (!carData[0]) return; // 確認原點存在
             for (let i = 1; i < 5; i++) {
                 if (!carData[i]) continue;
@@ -1748,9 +1748,6 @@
                 .then(() => loadShapeHistory())
                 .catch(err => alert('刪除失敗: ' + err));
         }
-
-
-
     </script>
 </body>
 </html>
