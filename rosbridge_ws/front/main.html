@@ -55,12 +55,12 @@
                     <p id="mouse_y">0</p>
                 </div>
                 <!-- 測試中12/15 劉丞翔 --> 
-                <div class="x_y_position">
+                <!-- <div class="x_y_position">
                     <p>x:</p>
                     <p id="mouse_camera_x">0</p>
                     <p>y:</p>
                     <p id="mouse_camera_y">0</p>
-                </div>
+                </div> -->
                 <div>
                     <button onclick="draw_round()">抓車子</button>
                     <button onclick="drow_clear()">清除</button>
@@ -277,9 +277,10 @@
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="1">基礎方向控制</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="2">定點移動</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="3">繪圖控制</button>
-                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">多機導航</button>
-                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">初始化</button>
-                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="6">移動測試</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">移動測試</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">多機導航</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this), function_init()" name="6">初始化</button>
+                    
                 </div>
             </div>
 
@@ -309,7 +310,9 @@
                 </div>
             </div>
 
-            <div class="card advanced-control-card">
+
+            <!-- 速度控制 -->
+            <!-- <div class="card advanced-control-card">
                 <h2>進階運動參數設定</h2>
                 <form id="velocity-form" onsubmit="event.preventDefault(); sendVelocityControl();">
                     <div class="form-group">
@@ -339,7 +342,7 @@
                         <button type="submit" class="action-btn primary">送出速度指令</button>
                     </div>
                 </form>
-            </div>
+            </div> -->
         </section>
     </main>
 
@@ -357,7 +360,13 @@
         test_param: 0,      //測試參數
     };
 
+    //功能四 參數控制移動
     function distance_test(){
+        if (newString!="4"){
+            alert("只有功能四才能使用")
+            return
+        }
+        
         const vehicleSelect = document.getElementById("vehicle-select2").value;
         const direction = parseFloat(document.getElementById("direction").value);
         const distance = parseFloat(document.getElementById("distance").value);
@@ -365,9 +374,9 @@
         
         let targets = [];
         if(vehicleSelect === "5") {
-            control_mian_data.cars = [1,2,3,4];
+            control_mian_data.cars = ["1","2","3","4"];
         } else {
-            control_mian_data.cars = [parseInt(vehicleSelect)]; 
+            control_mian_data.cars = [String(vehicleSelect)]; 
         }
         
         control_mian_data.mode = 4;//測試功能
@@ -379,6 +388,7 @@
             data: JSON.stringify(control_mian_data)
         });
         pub.publish(msg);
+        control_mian_data.cars = [];
     }
 
     function sendVelocityControl() {
@@ -419,9 +429,6 @@
     }
 </script>
     <script>
-
-
-
         /* ========================================= */
         /* 功能選擇 */
         /* ========================================= */
@@ -477,45 +484,40 @@
 
         // 訂閱並接收資料
         sub.subscribe((msg) => {
-            console.log("收到來自 esp32 的訊息:", msg.data);
+            console.log("收到來自 esp32 的訊息:", msg.data); //回傳資料車號,功能
 
             // 你要在畫面更新也可以，例如：
             const outputDiv = document.getElementById("ros-output");
             if (outputDiv) {
                 outputDiv.innerText = msg.data;
             }
-            const car_function = msg.data[0];//功能
-            const car_number = msg.data[1];//車號
-            const car_state = msg.data[2];
+            const car_number = msg.data[0];//車號
+            const car_function = msg.data[1];//功能
+            const state = document.getElementById(`status-${car_number}`);
+            const localId = document.getElementById(`local-pos-${car_number}`);
 
             //初始化
-            if(car_function == "1"){
-                if(car_state == 5){
-                    state.innerText = "撞機了";
-                    return;
-                }
-                
-                const state = document.getElementById(`status-${car_number}`);
-                const localId = document.getElementById(`local-pos-${car_number}`);
-                const local_angle = localId.innerText.slice(1,-1).split(",")[2];
-
-                if(local_angle != "0"){
-                    draw_init();
-                    state.innerText = "初始畫中...";
-                }else if(local_angle == "0"){
-                    console.log("state.innerText:", state.innerText);
-                    state.innerText = "完成初始畫";
-                }
+            if(car_function == 1){
+                state.innerText = "完成";
+            }else if(car_function == 2){
+                state.innerText = "失敗";
+            }else if(car_function == 3){
+                state.innerText = "移動中";
+            }else if(car_function == 4){
+                state.innerText = "沒電了";
+            }else if(car_function == 5){
+                state.innerText = "初始畫中";
             }
         });
+
         let carData = {};
         let special_car_x;
         let special_car_y;
         let scale_number;
         let scale_number_x;
         let scale_number_base;
-        const init_car_x = 145;
-        const init_car_y = 40;
+        const init_car_x = 166;
+        const init_car_y = 45;
         camera_position_data.subscribe((msg) => {
             const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
@@ -541,8 +543,8 @@
                 const web_mouse_x = document.getElementById(`mouse_x`);
                 const web_mouse_y = document.getElementById(`mouse_y`);
                 //id=0 11的值
-                const mouse_x_zero = init_car_x;
-                const mouse_x_eleven = 238;
+                const mouse_x_zero = 166;
+                const mouse_x_eleven = 292;
                 const web_diffrence = mouse_x_eleven - mouse_x_zero;
 
                 // 比例轉換
@@ -559,7 +561,6 @@
         // 發送訊息 (用於快速測試和基礎方向控制)
 
         let car_number = []; // 存放選中的車輛
-
         document.addEventListener("DOMContentLoaded", () => {
             const checkboxes = document.querySelectorAll("#vehicle-select-two input[type='checkbox']");
             console.log("good:", car_number);
@@ -1538,6 +1539,23 @@
         function draw_init() {
             const msg = new ROSLIB.Message({ data: String(123) });
             pub.publish(msg);
+        }
+
+        //車子初始畫校正
+        function function_init(){
+            console.log("功能初始化完成");
+            const confirmSend = confirm("是否要初始畫");
+            if (confirmSend) {
+                control_mian_data.mode = 5;
+                control_mian_data.cars = ["1","2","3","4"];
+                const msg = new ROSLIB.Message({
+                    data: JSON.stringify(control_mian_data)
+                });
+                pub.publish(msg);
+                control_mian_data.cars = [];
+            } else {
+                return;
+            }
         }
 
         // ===== 存正方形到資料庫 =====
