@@ -22,7 +22,7 @@
             console.log("收到 Node.js：", sql_data);
         });
     </script>
-
+x
     <header>
         <h1>ROS2 遠端控制介面</h1>
         <button id="logoutBtn">登出</button>
@@ -1661,6 +1661,12 @@
                         const match = item.description.match(/(\d+)x(\d+)/);
                         const hx = match ? parseInt(match[1]) : 0;
                         const hy = match ? parseInt(match[2]) : 0;
+
+                        //之後修正
+                        // let number_x = 1;
+                        // let number_y = 1;
+                        // number_x = hx / scale_number_x;
+                        // number_y = hy / scale_number_x;
 
                         // 用安全的日期格式化
                         const monthDay = item.id ? `#${item.id}` : '無日期';
