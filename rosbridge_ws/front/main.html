@@ -275,10 +275,10 @@
                 <h2>功能模式選擇</h2>
                 <div class="button-group grid-2">
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="1">基礎方向控制</button>
-                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="2">定點移動</button>
+                    <!-- <button class="action-btn-function secondary" onclick="selectMode(this)" name="2">定點移動</button> -->
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="3">繪圖控制</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this)" name="4">移動測試</button>
-                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">多機導航</button>
+                    <button class="action-btn-function secondary" onclick="selectMode(this)" name="5">群控</button>
                     <button class="action-btn-function secondary" onclick="selectMode(this), function_init()" name="6">初始化</button>
                     
                 </div>
@@ -916,6 +916,7 @@
                 // );
 
                 if (confirmSend) {
+                    drawPoints = drawPoints.slice(1);
                     sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
                 } else {
                   drawPoints = "";
@@ -932,6 +933,7 @@
                     data: normalizeRect(rectState.start, rectState.current)
                 });
 
+                
                 rectState.active = false;
                 const rect = normalizeRect(rectState.start, rectState.current);
                 console.log("功能2完成矩形", rect);
@@ -1019,19 +1021,9 @@
                 return; // 沒資料就直接結束
             }
             function_three_data.innerHTML=points;//測試
-            // const msg = new ROSLIB.Message({
-            //     data: points
-            // });
-
-            // pub.publish(msg);
             console.log("已傳給 ROS:", points);
-            // drawPoints = "";  // 清空紀錄
-
-
 
             control_mian_data.mode = 3;
-
-            // control_mian_data.direction.push(data);
             for (let i = 0; i + 1 < points.length / 8; i++) {
 
                 let base = i * 8;
