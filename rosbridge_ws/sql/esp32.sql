@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 19, 2026 at 11:25 PM
--- Server version: 8.0.44-0ubuntu0.22.04.2
--- PHP Version: 8.1.2-1ubuntu2.22
+-- Generation Time: Apr 28, 2026 at 05:13 PM
+-- Server version: 8.0.45-0ubuntu0.22.04.1
+-- PHP Version: 8.1.2-1ubuntu2.23
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -39,7 +39,7 @@ CREATE TABLE `car_state` (
 --
 
 INSERT INTO `car_state` (`car_number`, `line_speed`, `angle_speed`, `local_time`) VALUES
-(1, 0.5, 0, '2026-03-19 23:25:14'),
+(1, 0.5, 0, '2026-04-01 12:42:48'),
 (2, 0.5, 0.7, '2025-12-01 14:51:18'),
 (3, 0.5, 0, '2025-12-01 22:52:37'),
 (4, 2, 1, '2025-12-01 22:06:16'),
@@ -137,8 +137,10 @@ INSERT INTO `draw_square_data` (`id`, `shape`, `date`, `description`, `serial_nu
 (71, 'square', '{\"top\": 200, \"left\": 300, \"right\": 725, \"bottom\": 525}', '425x325', 601),
 (72, 'square', '{\"top\": 100, \"left\": 175, \"right\": 725, \"bottom\": 550}', '550x450', 9125),
 (73, 'square', '{\"top\": 200, \"left\": 100, \"right\": 525, \"bottom\": 500}', '425x300', 2112),
-(74, 'square', '{\"top\": 50, \"left\": 75, \"right\": 500, \"bottom\": 525}', '425x475', 1330),
-(75, 'square', '{\"top\": 175, \"left\": 125, \"right\": 700, \"bottom\": 550}', '575x375', 5895);
+(76, 'square', '{\"top\": 0, \"left\": 25, \"right\": 700, \"bottom\": 525}', '675x525', 6505),
+(77, 'square', '{\"top\": 150, \"left\": 300, \"right\": 675, \"bottom\": 500}', '375x350', 5231),
+(78, 'square', '{\"top\": 225, \"left\": 200, \"right\": 725, \"bottom\": 525}', '525x300', 44),
+(79, 'square', '{\"top\": 225, \"left\": 200, \"right\": 725, \"bottom\": 525}', '375x375', 3819);
 
 -- --------------------------------------------------------
 
@@ -218,7 +220,7 @@ ALTER TABLE `user_base`
 -- AUTO_INCREMENT for table `draw_square_data`
 --
 ALTER TABLE `draw_square_data`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
 
 --
 -- AUTO_INCREMENT for table `draw_triangle_data`
