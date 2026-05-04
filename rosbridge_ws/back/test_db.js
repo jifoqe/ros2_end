@@ -2,6 +2,9 @@
 // http://localhost:3000/api/update_machine
 // http://localhost:3000/api/Login
 // http://localhost:3000/api/register
+// http://localhost:3000/api/create/coordinate_data
+// http://localhost:3000/api/query/coordinate_data
+// http://localhost:3000/api/delete/coordinate_data
 
 // http://localhost/phpmyadmin/index.php?route=/&route=%2F
 // 建立 MySQL 連線
