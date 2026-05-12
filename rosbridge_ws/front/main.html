@@ -716,6 +716,10 @@ x
             y: 0
         };
         let historynumber = 0; 
+        let lineState = {
+            active: false,
+            points: []
+        };
 
 
         // 建立canvas空間
@@ -860,6 +864,8 @@ x
                     if (closestX !== null && closestY !== null && drawing ==true) {
                         ctx.beginPath();
                         ctx.moveTo(closestX, closestY);
+                        lineState.active = true;
+                        lineState.points = [{ x: closestX, y: closestY }];
 
                         console.log("從最近圓開始畫線: ", closestX, closestY);
                     }
@@ -909,6 +915,17 @@ x
             }
 
             if (drawPoints.length > 0 && draw_function.includes("1")) {
+                if (lineState.points.length > 1) {
+                    drawHistory.unshift({
+                        type: "line",
+                        data: {
+                            points: [...lineState.points]
+                        }
+                    });
+                }
+
+                lineState.active = false;
+                lineState.points = [];
                 const confirmSend = confirm("繪圖完成！\n是否送出給 ROS？");
                 // const jsonData = JSON.stringify(control_mian_data, null, 2);
                 // const confirmSend = confirm(
@@ -967,14 +984,14 @@ x
         let last_ix = null;
         let last_iy = null;
         function drawIfNeeded(x, y) {
-            if (!drawing) {
+            if (!drawing || !lineState.active) {
                 return;
             }
 
             // if (){
             //     alert("起始點必須要車子上面");
             // }
-            const rect = canvas.getBoundingClientRect();
+            // const rect = canvas.getBoundingClientRect();
             const raw_ix = Math.round(x / scale_number_base) * scale_number_base;
             const raw_iy = Math.round(y / scale_number_base) * scale_number_base;
 
@@ -991,6 +1008,10 @@ x
             last_iy = iy;
             
             console.log("x:",ix ,"y:",iy)
+            const last = lineState.points[lineState.points.length - 1];
+            if (!last || last.x !== raw_ix || last.y !== raw_iy) {
+                lineState.points.push({ x: raw_ix, y: raw_iy });
+            }
             // drawPoints += encodeCoord(ix);
             // drawPoints += encodeCoord(iy);
             drawPoints += encodeCoord(parseInt(ix));
@@ -1298,9 +1319,16 @@ x
                 }
 
                 if (item.type === "line") {
+                    const pts = item.data.points;
+                    if (!pts || pts.length < 2) continue;
+
                     ctx.beginPath();
-                    ctx.moveTo(item.from.x, item.from.y);
-                    ctx.lineTo(item.to.x, item.to.y);
+                    ctx.moveTo(pts[0].x, pts[0].y);
+                    for (let j = 1; j < pts.length; j++) {
+                        ctx.lineTo(pts[j].x, pts[j].y);
+                    }
+                    ctx.strokeStyle = "red";
+                    ctx.lineWidth = 2;
                     ctx.stroke();
                 }
 
@@ -1355,13 +1383,26 @@ x
 
                 if (item.type === "rect") {
                     const r = item.data;
+                    ctx.strokeStyle = "blue";
                     ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
                 }
 
                 if (item.type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(item.from.x, item.from.y);
-                    ctx.lineTo(item.to.x, item.to.y);
+                    const pts = item.data.points;
+                if (!pts || pts.length < 2) continue;
+
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                for (let j = 1; j < pts.length; j++) {
+                    ctx.lineTo(pts[j].x, pts[j].y);
+                }
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                for (let j = 1; j < pts.length; j++) {
+                    ctx.lineTo(pts[j].x, pts[j].y);
+                }
                     ctx.stroke();
                 }
 
@@ -1371,14 +1412,11 @@ x
                     ctx.strokeStyle = 'orange';
                     ctx.lineWidth = 3;
                     ctx.setLineDash([]);  // 實線
-
-                    // 用 drawPreviewTri 的計算邏輯（40px寬度）
                     const p1 = item.data.start;
                     const p2 = item.data.end;
                     ctx.beginPath();
                     ctx.moveTo(p1.x, p1.y);
                     ctx.lineTo(p2.x, p2.y);
-
                     const midX = (p1.x + p2.x) / 2;
                     const midY = (p1.y + p2.y) / 2;
                     const dx = p2.x - p1.x;
@@ -1388,7 +1426,6 @@ x
                     const len = Math.sqrt(perpX * perpX + perpY * perpY)|| 1;
                     const leftX = midX - perpX / len * 80;  // 跟預覽一樣的8px
                     const leftY = midY - perpY / len * 80;
-
                     ctx.lineTo(leftX, leftY);
                     ctx.closePath();
                     ctx.stroke();
