@@ -777,20 +777,20 @@ x
                 // y = -y;
                 if (rectState.model == false) {
                     rectState.current = { x, y };
-                    drow_clear();
+                    redrawScene();
                     drawPreviewRect(rectState.start, rectState.current);
                 }else{
                     x = Number(rectState.start.x) + Number(database_car_data.x);
                     y = Number(rectState.start.y) - Number(database_car_data.y);
                     rectState.current = { x, y };
-                    drow_clear();
+                    redrawScene();
                     drawPreviewRect(rectState.start, rectState.current);
                 }
             }
 
             if (draw_function.includes('3')) {
                 if (triState.active) {
-                    drow_clear();
+                    redrawScene();
                     drawPreviewTri(triState.start, { x: x, y: y });
                 }
             }
@@ -1286,6 +1286,11 @@ x
         //     }
 
 
+        function redrawScene() {
+            drow_clear();
+            draw_round();
+            redrawAll();
+        }
 
         //移動物件(劉丞翔 尚未完成)
         function draw_move(p1, p2, x, y) {
@@ -1304,9 +1309,6 @@ x
 
         //全部的紀錄
         function redrawAll() {
-
-             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             for (const item of drawHistory) {
                 if (item.type === "rect") {
                     const r = item.data;
