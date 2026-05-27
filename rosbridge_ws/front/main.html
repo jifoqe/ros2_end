@@ -1312,12 +1312,17 @@ x
             for (const item of drawHistory) {
                 if (item.type === "rect") {
                     const r = item.data;
+                    ctx.save();
+                    ctx.strokeStyle = "blue";
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([]);
                     ctx.strokeRect(
                         r.left,
                         r.top,
                         r.right - r.left,
                         r.bottom - r.top
                     );
+                    ctx.restore();
                 }
 
                 if (item.type === "line") {
@@ -1385,8 +1390,12 @@ x
 
                 if (item.type === "rect") {
                     const r = item.data;
+                    ctx.save();
                     ctx.strokeStyle = "blue";
+                    ctx.setLineDash([6, 4]);
                     ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
+                    ctx.setLineDash([]);
+                    ctx.restore();
                 }
 
                 if (item.type === "line") {
