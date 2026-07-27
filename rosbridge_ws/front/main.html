@@ -22,7 +22,7 @@
             console.log("收到 Node.js：", sql_data);
         });
     </script>
-x
+
     <header>
         <h1>ROS2 遠端控制介面</h1>
         <button id="logoutBtn">登出</button>
@@ -520,8 +520,8 @@ x
         // id 0 的座標
         // const init_car_x = 166;
         // const init_car_y = 45;
-        const init_car_x = 88;
-        const init_car_y = 50;
+        const init_car_x = 112;
+        const init_car_y = 75;
         camera_position_data.subscribe((msg) => {
             const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
@@ -549,8 +549,8 @@ x
                 //id=0 11的值
                 // const mouse_x_zero = 166;
                 // const mouse_x_eleven = 292;
-                const mouse_x_zero = 88;
-                const mouse_x_eleven = 210;
+                const mouse_x_zero = 112;
+                const mouse_x_eleven = 230;
                 const web_diffrence = mouse_x_eleven - mouse_x_zero;
 
                 // 比例轉換
