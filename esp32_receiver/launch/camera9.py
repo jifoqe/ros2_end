@@ -6,8 +6,19 @@ import numpy as np
 # ------------------------------
 cap = cv2.VideoCapture(0)
 
+# 固定解析度
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+
+# 關閉自動曝光
+cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+cap.set(cv2.CAP_PROP_EXPOSURE, -6)
+
+# 關閉自動白平衡
+cap.set(cv2.CAP_PROP_AUTO_WB, 0)
+
 # 平滑參數，值越大越穩定
-SMOOTHING = 0.6
+SMOOTHING = 0.9
 last_green_points = []
 
 # 自動亮度/對比調整函式
@@ -24,6 +35,27 @@ def clean_mask(mask):
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)   # 去除小白點
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # 填補小黑洞
     return mask
+
+def refine_center(gray, pt):
+
+    corners = np.array([[pt]], dtype=np.float32)
+
+    criteria = (
+        cv2.TERM_CRITERIA_EPS +
+        cv2.TERM_CRITERIA_MAX_ITER,
+        40,
+        0.001
+    )
+
+    cv2.cornerSubPix(
+        gray,
+        corners,
+        (7,7),
+        (-1,-1),
+        criteria
+    )
+
+    return tuple(corners[0][0])
 
 # 座標平滑
 def smooth_point(prev, current):
@@ -45,7 +77,9 @@ while True:
     frame = auto_brightness(frame)
 
     # 高斯模糊去雜訊
-    frame = cv2.GaussianBlur(frame, (7,7), 0)
+    frame = cv2.GaussianBlur(frame, (3,3), 0)
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # BGR → HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -67,11 +101,21 @@ while True:
     if contours_r:
         c = max(contours_r, key=cv2.contourArea)
         if cv2.contourArea(c) > 150:   # 過小忽略
-            x_r, y_r, w_r, h_r = cv2.boundingRect(c)
-            ref_point = (x_r + w_r//2, y_r + h_r//2)
+            # x_r, y_r, w_r, h_r = cv2.boundingRect(c)
+            # ref_point = (x_r + w_r//2, y_r + h_r//2)
+
+            M = cv2.moments(c)
+            if M["m00"] != 0:
+                cx = M["m10"] / M["m00"]
+                cy = M["m01"] / M["m00"]
+                ref_point = (cx, cy)
+
             cv2.circle(frame, ref_point, 8, (0,0,255), -1)
             cv2.putText(frame, "(0,0)", (ref_point[0]+10, ref_point[1]),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
+
+    ref_point = refine_center(gray, ref_point)
+    green_centers.append(refine_center(gray, (cx, cy)))
 
     # ------------------------------
     # 綠色遮罩（多目標）
@@ -87,8 +131,14 @@ while True:
     for c in contours_g:
         if cv2.contourArea(c) < 500:
             continue
-        x_g, y_g, w_g, h_g = cv2.boundingRect(c)
-        green_centers.append((x_g + w_g//2, y_g + h_g//2))
+        # x_g, y_g, w_g, h_g = cv2.boundingRect(c)
+        # green_centers.append((x_g + w_g//2, y_g + h_g//2))
+
+        M = cv2.moments(c)
+        if M["m00"] != 0:
+            cx = M["m10"] / M["m00"]
+            cy = M["m01"] / M["m00"]
+            green_centers.append((cx, cy))
 
     # ------------------------------
     # 平滑綠點

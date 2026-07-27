@@ -12,13 +12,13 @@ public:
     {
         // ===== Subscriber =====
         esp32_subscription_3 = this->create_subscription<std_msgs::msg::String>(
-            "esp32_topic_3",
+            "esp32_topic_4",
             10,
             std::bind(&ESP32Subscriber::topic_esp32_data_3, this, _1)
         );
 
         // ===== Publisher =====
-        move_pub_ = this->create_publisher<std_msgs::msg::String>("/move_data_1", 10);
+        move_pub_ = this->create_publisher<std_msgs::msg::String>("/move_data_4", 10);
         web_output_pub_ = this->create_publisher<std_msgs::msg::String>("/web_output", 10);
     }
 
@@ -26,11 +26,12 @@ private:
     // ===== ESP32 callback =====
     void topic_esp32_data_3(const std_msgs::msg::String::SharedPtr msg)
     {
-        RCLCPP_INFO(this->get_logger(),
-            "Received from ESP32_3: '%s'",
-            msg->data.c_str()
-        );
-        publish_web_output(msg->data);
+        // int index = 3;
+        RCLCPP_INFO(this->get_logger(), "Received from ESP32_4: '%s'", msg->data.c_str());
+        // state[index] = std::stoi(msg->data);
+        // RCLCPP_INFO(this->get_logger(), "獲得資料: '%d'", state[index]);
+        // publish_web_output(msg->data);
+        // total_move_check(); //都移動好了一起動
     }
 
     // ===== publish function =====
@@ -39,12 +40,18 @@ private:
         std_msgs::msg::String msg;
         msg.data = data;
 
-        RCLCPP_INFO(this->get_logger(),
-            "send to web: '%s'",
-            msg.data.c_str()
-        );
+        RCLCPP_INFO(this->get_logger(), "send to web: '%s'", msg.data.c_str());
 
         web_output_pub_->publish(msg);
+    }
+
+    void total_move_check(){
+        if(state[0] == 1 && state[1] == 1 && state[2] == 1 && state[3] == 1){
+            RCLCPP_INFO(this->get_logger(), "所有動作完成，開始下一步");
+            std_msgs::msg::String msg;
+            msg.data = "1";
+            move_pub_->publish(msg);
+        }
     }
 
     // ===== Subscriber =====
@@ -53,6 +60,7 @@ private:
     // ===== Publisher =====
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr move_pub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr web_output_pub_;
+    int state[4] = {0}; //0未完成, 1完成
 };
 
 int main(int argc, char * argv[])
