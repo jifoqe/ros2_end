@@ -608,6 +608,7 @@
                 data: JSON.stringify(control_mian_data)
             });
             pub.publish(msg);
+            console.log("已發送:", msg);
             control_mian_data = {
                 mode: 0,             // 功能模式
                 direction: [],// 方向
@@ -831,8 +832,12 @@
                 return;
             }
 
-            
+            // if(newString[0]!= "3"){
+            //     drawPoints += newString; //關掉了第一個號碼
+            // }
             drawPoints += newString; //關掉了第一個號碼
+            // console.log("多了一碼",drawPoints);
+
             drawing = true;
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
@@ -858,7 +863,7 @@
                             closestX = originX;
                             closestY = originY;
                             console.log("id:", i);
-                            drawPoints += String(i);
+                            drawPoints += String(i);  //問題？
                             drawing = true;
                             break;
                         }else{
@@ -940,6 +945,7 @@
 
                 if (confirmSend) {
                     drawPoints = drawPoints.slice(1);
+                    drawPoints = drawPoints.replace(/^3+/, "");
                     sendDrawDataToROS(drawPoints);  // 送出並跳成功視窗
                 } else {
                   drawPoints = "";
