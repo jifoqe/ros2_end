@@ -63,7 +63,7 @@
                 </div> -->
                 <div>
                     <button onclick="draw_round()">抓車子</button>
-                    <button onclick="drow_clear()">清除</button>
+                    <button onclick="now_drow_clear()">清除</button>
                     <button onclick="draw_last()">上一步</button>
                     <button onclick="draw_next()">下一步</button>
                     <button onclick="draw_init()">初始畫</button>
@@ -914,7 +914,7 @@
 
         // 放開滑鼠 → 停止畫 + 確認送出
         document.addEventListener("mouseup", () => {
-            console.log('方開了', drawPoints);
+            console.log('放開了', drawPoints);
             ctx.beginPath();
             if (drawing == false){
                 return;
@@ -1294,7 +1294,7 @@
 
         function redrawScene() {
             drow_clear();
-            draw_round();
+            // draw_round();
             redrawAll();
         }
 
@@ -1518,6 +1518,12 @@
         //清除
         function drow_clear(){
             history_number = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function now_drow_clear(){
+            history_number = 0;
+            drawHistory = [];
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
