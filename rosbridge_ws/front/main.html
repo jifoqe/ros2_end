@@ -358,6 +358,7 @@
         speed: 50,           // 速度（可選）
         cars: [],     // 控制哪些車
         test_param: 0,      //測試參數
+        start_time: 0, //指令開始時間
     };
 
     //功能四 參數控制移動
@@ -384,6 +385,7 @@
         control_mian_data.test_param = distance;
         console.log("distance_test data:", control_mian_data);
 
+        send_synchronous();
         const msg = new ROSLIB.Message({
             data: JSON.stringify(control_mian_data)
         });
@@ -520,8 +522,8 @@
         // id 0 的座標
         // const init_car_x = 166;
         // const init_car_y = 45;
-        const init_car_x = 112;
-        const init_car_y = 75;
+        const init_car_x = 177;
+        const init_car_y = 35;
         camera_position_data.subscribe((msg) => {
             const parts = msg.data.split(",");  // ["id", "x_cm", "y_cm", "yaw_deg", "u_pixel", "v_pixel"]
 
@@ -547,14 +549,14 @@
                 const web_mouse_x = document.getElementById(`mouse_x`);
                 const web_mouse_y = document.getElementById(`mouse_y`);
                 //id=0 11的值
-                // const mouse_x_zero = 166;
+                // const mouse_x_zero = 166;s
                 // const mouse_x_eleven = 292;
-                const mouse_x_zero = 112;
-                const mouse_x_eleven = 230;
+                const mouse_x_zero = 85;
+                const mouse_x_eleven = 707;
                 const web_diffrence = mouse_x_eleven - mouse_x_zero;
 
-                // 比例轉換
-                scale_number_x = web_diffrence/33.6;
+                // 比例轉換 162.5 33.2
+                scale_number_x = web_diffrence/165;
                 scale_number_base = 5*scale_number_x; //繪圖一格的大小18.154
                 // console.log("scale_number_base:", scale_number_base);
             }
@@ -604,9 +606,11 @@
             for (let i = 0; i < car_number.length; i++) {
                 control_mian_data.cars.push(car_number[i]);
             }
+            send_synchronous();
             const msg = new ROSLIB.Message({
                 data: JSON.stringify(control_mian_data)
             });
+            
             pub.publish(msg);
             console.log("已發送:", msg);
             control_mian_data = {
@@ -614,6 +618,7 @@
                 direction: [],// 方向
                 speed: 50,           // 速度（可選）
                 cars: [],     // 控制哪些車
+                start_time: 0,
             }
         }
 
@@ -679,6 +684,7 @@
                 encode(lx) + encode(ly) + encode(la) +
                 encode(gx) + encode(gy) + encode(ga);
 
+            send_synchronous();
             const msg = new ROSLIB.Message({ data: code });
             pub.publish(msg);
 
@@ -690,6 +696,7 @@
             newString = "5"
             newString += String(car_number);
             
+            send_synchronous();
             const msg = new ROSLIB.Message({ data: newString });
             pub.publish(msg);
             console.log("已發送:", newString);
@@ -1094,6 +1101,7 @@
             for (let i = 0; i < car_number.length; i++) {
                 control_mian_data.cars.push(car_number[i]);
             }
+            send_synchronous();
             const msg = new ROSLIB.Message({
                 data: JSON.stringify(control_mian_data)
             });
@@ -1571,6 +1579,7 @@
                 total_car_date += encodeCoord(goal_text_y);
             }
 
+            send_synchronous();
             const msg = new ROSLIB.Message({ data: String(total_car_date) });
             pub.publish(msg);
             console.log("3已發送:", total_car_date);
@@ -1595,6 +1604,7 @@
         /* IV 初始畫車子 */
         /* ========================================= */
         function draw_init() {
+            send_synchronous();
             const msg = new ROSLIB.Message({ data: String(123) });
             pub.publish(msg);
         }
@@ -1606,6 +1616,7 @@
             if (confirmSend) {
                 control_mian_data.mode = 5;
                 control_mian_data.cars = ["1","2","3","4"];
+                send_synchronous();
                 const msg = new ROSLIB.Message({
                     data: JSON.stringify(control_mian_data)
                 });
@@ -1811,6 +1822,14 @@
                 .then(res => res.json())
                 .then(() => loadShapeHistory())
                 .catch(err => alert('刪除失敗: ' + err));
+        }
+
+        // 資料傳送同步功能
+        function send_synchronous() {
+            const now = Date.now() / 1000;
+            const start_time = now + 2.0;
+            control_mian_data.start_time = start_time;
+            console.log("現在時間", control_mian_data.start_time);
         }
     </script>
 </body>

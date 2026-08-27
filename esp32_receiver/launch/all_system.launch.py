@@ -28,8 +28,11 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 {"video_device": "/dev/video2"},   # ← 在這裡指定你的外接相機
+                # {"video_device": "/dev/v4l/by-id/usb-Microsoft_LifeCam_Cinema-video-index0"},  # 新相機
                 # {"image_size": [640, 480]},        # 可選
-                {"pixel_format": "YUYV"}           # 可選
+                # {"image_size": [1920, 1080]},
+                {"pixel_format": "YUYV"},           # 可選
+                # {"exposure_auto": 1}
             ]
         ),
 

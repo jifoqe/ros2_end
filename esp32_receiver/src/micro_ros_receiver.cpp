@@ -14,7 +14,7 @@ public:
     {
         // auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
         // qos.reliable();
-
+       
         // ===== Subscriber =====
         esp32_subscription_3 = this->create_subscription<std_msgs::msg::String>(
             "esp32_topic",
@@ -52,41 +52,54 @@ private:
             state[index-1] = number;
         }
 
-        min_number = std::min({state[2], state[3]});
+        int min_number = std::min({state[2], state[3]});
 
-        if(number>min_number){
-            return;
-        }
+        // if(number>min_number){
+        //     return;
+        // }
 
         if(index == 1 && strcmp(command, "end") == 0){
-            state[index-1] = 0;
+            state[index-1] = -1;
         }else if(index == 2 && strcmp(command, "end") == 0){
-            state[index-1] = 0;
+            state[index-1] = -1;
         }else if(index == 3 && strcmp(command, "end") == 0){
-            state[index-1] = 0;
+            state[index-1] = -1;
         }else if(index == 4 && strcmp(command, "end") == 0){
-            state[index-1] = 0;
+            state[index-1] = -1;
         }
 
-        if(state[2] == state[3] && state[2] != 0 && state[3] != 0){
+        // state[2] == state[3] && state[2] != -1 && state[3] != -1 邏輯不對
+        // number == min_number
+        if(number == min_number){
             std_msgs::msg::String good;
-            good.data = std::to_string(min_number);
+            auto now = this->now();
+            double start_time = now.seconds() + 3.0;
+            good.data = std::to_string(min_number) + "," + std::to_string(start_time);
             
-            RCLCPP_INFO(this->get_logger(),"同步移動");
-            for (int i = 0; i < 100; i++){
-                move_pub_->publish(good);
-                rclcpp::sleep_for(std::chrono::milliseconds(20)); // 間隔20ms
-            }
-        }else if(strcmp(command, "base_move_ok") == 0){
-            std_msgs::msg::String good;
-            good.data = std::to_string(min_number);
-            
-            RCLCPP_INFO(this->get_logger(),"最慢的要跟上");
-            for (int i = 0; i < 100; i++){
-                move_pub_->publish(good);
-                rclcpp::sleep_for(std::chrono::milliseconds(20)); // 間隔20ms
-            }
+            // 瘋狂傳遞資料
+            RCLCPP_INFO(this->get_logger(),"同步移動，開始時間 %.3f",start_time);
+            RCLCPP_INFO(this->get_logger(),"傳送資料 %.3f",good);
+            rclcpp::sleep_for(std::chrono::seconds(1));
+            move_pub_->publish(good);
+
+            // for (int i = 0; i < 100; i++){
+            //     move_pub_->publish(good);
+            //     rclcpp::sleep_for(std::chrono::milliseconds(20)); // 間隔20ms
+            // }
+        }else{
+            RCLCPP_INFO(this->get_logger(),"min_number %d  number %d",min_number, number);
         }
+        
+        // else if(strcmp(command, "base_move_ok") == 0){
+        //     std_msgs::msg::String good;
+        //     good.data = std::to_string(min_number);
+            
+        //     RCLCPP_INFO(this->get_logger(),"最慢的要跟上");
+        //     for (int i = 0; i < 100; i++){
+        //         move_pub_->publish(good);
+        //         rclcpp::sleep_for(std::chrono::milliseconds(20)); // 間隔20ms
+        //     }
+        // }
     }
 
     // ===== publish function =====
@@ -115,8 +128,8 @@ private:
     // ===== Publisher =====
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr move_pub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr web_output_pub_;
-    int state[4] = {0}; //0未完成, 1完成
-    int min_number = 0;
+    int state[4] = {-1, -1, -1, -1}; // -1未完成, 1完成
+    // int min_number = 0;
 };
 
 int main(int argc, char * argv[])

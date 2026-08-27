@@ -1,3 +1,4 @@
+// 影像處理arcuo marker
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "cv_bridge/cv_bridge.h"
@@ -133,7 +134,7 @@ private:
       
       std::map<int, double> x_prev_, y_prev_, yaw_prev_;
       bool first_frame_ = true;
-      double alpha_ = 0.2;   // 0.1~0.3（越小越穩）
+      double alpha_ = 0.1;   // 0.1~0.3（越小越穩）
       // ===============================
       // STEP 2: compute all markers in world frame（完整版）
       // ===============================
